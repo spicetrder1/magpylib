@@ -340,11 +340,11 @@ def test_style():
 
 def test_kwargs():
     """test kwargs inputs, only relevant for styles"""
-    bg = BaseGeo((0, 0, 0), None, style=dict(name="name_01"), style_name="name_02")
-    assert bg.style.name == "name_02"
+    bg = BaseGeo((0, 0, 0), None, style=dict(label="name_01"), style_label="name_02")
+    assert bg.style.label == "name_02"
 
     with pytest.raises(TypeError):
-        bg = BaseGeo((0, 0, 0), None, styl_name="name_02")
+        bg = BaseGeo((0, 0, 0), None, styl_label="name_02")
 
 def test_bad_sum():
     """test when adding bad objects"""
