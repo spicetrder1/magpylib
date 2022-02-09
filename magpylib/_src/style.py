@@ -1,9 +1,10 @@
 """Collection of classes for display styling"""
 # pylint: disable=C0302
 import numpy as np
+import param
 
 from magpylib._src.defaults.defaults_utility import (
-    MagicProperties,
+    MagicParameterized,
     validate_property_class,
     color_validator,
     get_defaults_dict,
@@ -70,118 +71,71 @@ def get_style(obj, default_settings, **kwargs):
     return style
 
 
-class BaseStyle(MagicProperties):
+class BaseStyle(MagicParameterized):
     """
     Base class for display styling options of `BaseGeo` objects
 
     Properties
     ----------
     label : str, default=None
-        label of the class instance, can be any string.
+
 
     description: dict or Description, default=None
-        object description properties
 
     color: str, default=None
-        a valid css color. Can also be one of `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`
+
 
     opacity: float, default=None
-        object opacity between 0 and 1, where 1 is fully opaque and 0 is fully transparent.
+        .
 
     path: dict or Path, default=None
-        an instance of `Path` or dictionary of equivalent key/value pairs, defining the object
-        path marker and path line properties.
+
 
     model3d: list of Trace3d objects, default=None
-        a list of traces where each is an instance of `Trace3d` or dictionary of equivalent
-        key/value pairs. Defines properties for an additional user-defined model3d object which is
-        positioned relatively to the main object to be displayed and moved automatically with it.
-        This feature also allows the user to replace the original 3d representation of the object.
+
     """
 
-    def __init__(
-        self,
-        label=None,
-        description=None,
-        color=None,
-        opacity=None,
-        path=None,
-        model3d=None,
-        **kwargs,
-    ):
-        super().__init__(
-            label=label,
-            description=description,
-            color=color,
-            opacity=opacity,
-            path=path,
-            model3d=model3d,
-            **kwargs,
-        )
-
-    @property
-    def label(self):
-        """label of the class instance, can be any string"""
-        return self._label
-
-    @label.setter
-    def label(self, val):
-        self._label = val if val is None else str(val)
-
-    @property
-    def description(self):
-        """Description class with 'text' and 'show' properties"""
-        return self._description
-
-    @description.setter
-    def description(self, val):
-        self._description = validate_property_class(
-            val, "description", Description, self
-        )
-
-    @property
-    def color(self):
-        """a valid css color. Can also be one of `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`"""
-        return self._color
-
-    @color.setter
-    def color(self, val):
-        self._color = color_validator(val, parent_label=f"{type(self).__name__}")
-
-    @property
-    def opacity(self):
-        """object opacity between 0 and 1, where 1 is fully opaque and 0 is fully transparent"""
-        return self._opacity
-
-    @opacity.setter
-    def opacity(self, val):
-        assert val is None or (isinstance(val, (float, int)) and 0 <= val <= 1), (
-            "opacity must be a value betwen 0 and 1\n"
-            f"but received {repr(val)} instead"
-        )
-        self._opacity = val
-
-    @property
-    def path(self):
-        """an instance of `Path` or dictionary of equivalent key/value pairs, defining the
-        object path marker and path line properties"""
-        return self._path
-
-    @path.setter
-    def path(self, val):
-        self._path = validate_property_class(val, "path", Path, self)
-
-    @property
-    def model3d(self):
-        """3d object representation properties"""
-        return self._model3d
-
-    @model3d.setter
-    def model3d(self, val):
-        self._model3d = validate_property_class(val, "model3d", Model3d, self)
+    label = param.String(
+        default=None,
+        allow_None=True,
+        doc="label of the class instance, can be any string.",
+    )
+    description = param.ClassSelector(
+        Description,
+        default=Description(),
+        doc="object description properties such as `text` and `show`.",
+    )
+    color = param.Color(
+        default=None,
+        allow_None=True,
+        doc="a valid css color. Can also be one of `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.",
+    )
+    opacity = param.Number(
+        default=None,
+        allow_None=True,
+        doc="object opacity between 0 and 1, where 1 is fully opaque and 0 is fully transparent.",
+    )
+    path = param.ClassSelector(
+        Path,
+        default=Path(),
+        doc=(
+            """an instance of `Path` or dictionary of equivalent key/value pairs, defining the object
+path marker and path line properties."""
+        ),
+    )
+    mesh3d = param.List(
+        default=None,
+        allow_None=True,
+        doc=(
+            """a list of traces where each is an instance of `Trace3d` or dictionary of equivalent
+key/value pairs. Defines properties for an additional user-defined model3d object which is
+positioned relatively to the main object to be displayed and moved automatically with it.
+This feature also allows the user to replace the original 3d representation of the object."""
+        ),
+    )
 
 
-class Description(MagicProperties):
+class Description(MagicParameterized):
     """
     Defines properties for a description object
 
@@ -224,7 +178,7 @@ class Description(MagicProperties):
         self._show = val
 
 
-class Model3d(MagicProperties):
+class Model3d(MagicParameterized):
     """
     Defines properties for the 3d model representation of the magpylib objects
 
@@ -314,7 +268,7 @@ class Model3d(MagicProperties):
         return self
 
 
-class Trace3d(MagicProperties):
+class Trace3d(MagicParameterized):
     """
     Defines properties for an additional user-defined 3d model object which is positioned relatively
     to the main object to be displayed and moved automatically with it. This feature also allows
@@ -446,7 +400,7 @@ class Trace3d(MagicProperties):
         self._backend = val
 
 
-class Magnetization(MagicProperties):
+class Magnetization(MagicParameterized):
     """
     Defines magnetization styling properties
 
@@ -504,7 +458,7 @@ class Magnetization(MagicProperties):
         self._color = validate_property_class(val, "color", MagnetizationColor, self)
 
 
-class MagnetizationColor(MagicProperties):
+class MagnetizationColor(MagicParameterized):
     """
     Defines the magnetization direction color styling properties.
 
@@ -637,7 +591,7 @@ class MagnetProperties:
         )
 
 
-class Magnet(MagicProperties, MagnetProperties):
+class Magnet(MagicParameterized, MagnetProperties):
     """
     Defines the specific styling properties of objects of the `magnet` family
 
@@ -723,7 +677,7 @@ class SensorProperties:
         self._pixel = validate_property_class(val, "pixel", Pixel, self)
 
 
-class Sensor(MagicProperties, SensorProperties):
+class Sensor(MagicParameterized, SensorProperties):
     """
     Defines the specific styling properties of objects of the `sensor` family
 
@@ -778,7 +732,7 @@ class SensorStyle(BaseStyle, SensorProperties):
         super().__init__(**kwargs)
 
 
-class Pixel(MagicProperties):
+class Pixel(MagicParameterized):
     """
     Defines the styling properties of sensor pixels
 
@@ -860,7 +814,7 @@ class CurrentProperties:
         self._arrow = validate_property_class(val, "current", Arrow, self)
 
 
-class Current(MagicProperties, CurrentProperties):
+class Current(MagicParameterized, CurrentProperties):
     """
     Defines the specific styling properties of objects of the `current` family
 
@@ -909,7 +863,7 @@ class CurrentStyle(BaseStyle, CurrentProperties):
         super().__init__(**kwargs)
 
 
-class Arrow(MagicProperties):
+class Arrow(MagicParameterized):
     """
     Defines the styling properties of current arrows
 
@@ -968,7 +922,7 @@ class Arrow(MagicProperties):
         self._width = val
 
 
-class Marker(MagicProperties):
+class Marker(MagicParameterized):
     """
     Defines the styling properties of plot markers
 
@@ -1092,7 +1046,7 @@ class DipoleProperties:
         self._pivot = val
 
 
-class Dipole(MagicProperties, DipoleProperties):
+class Dipole(MagicParameterized, DipoleProperties):
     """
     Defines the specific styling properties of the objects of the `dipole` family
 
@@ -1149,7 +1103,7 @@ class DipoleStyle(BaseStyle, DipoleProperties):
         super().__init__(**kwargs)
 
 
-class Path(MagicProperties):
+class Path(MagicParameterized):
     """
     Defines the styling properties of an object's path
 
@@ -1178,9 +1132,16 @@ class Path(MagicProperties):
         show/hide numbering on path positions. Only applies if show=True.
     """
 
-    def __init__(self, marker=None, line=None, frames=None, show=None, numbering=None, **kwargs):
+    def __init__(
+        self, marker=None, line=None, frames=None, show=None, numbering=None, **kwargs
+    ):
         super().__init__(
-            marker=marker, line=line, frames=frames, show=show, numbering=numbering, **kwargs
+            marker=marker,
+            line=line,
+            frames=frames,
+            show=show,
+            numbering=numbering,
+            **kwargs,
         )
 
     @property
@@ -1215,7 +1176,8 @@ class Path(MagicProperties):
         assert val is None or isinstance(val, bool), (
             f"the `show` property of {type(self).__name__} must be either "
             "`True` or `False`"
-            f"\nbut received {repr(val)} instead")
+            f"\nbut received {repr(val)} instead"
+        )
         self._show = val
 
     @property
@@ -1255,7 +1217,7 @@ but received {repr(val)} instead"""
         self._numbering = val
 
 
-class Line(MagicProperties):
+class Line(MagicParameterized):
     """
     Defines Line styling properties
 
@@ -1314,7 +1276,7 @@ class Line(MagicProperties):
         self._width = val
 
 
-class DisplayStyle(MagicProperties):
+class DisplayStyle(MagicParameterized):
     """
     Base class containing styling properties for all object families. The properties of the
     sub-classes get set to hard coded defaults at class instantiation
