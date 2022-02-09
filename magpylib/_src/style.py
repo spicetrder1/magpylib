@@ -75,10 +75,10 @@ class BaseStyle(MagicParameterized):
     """
     Base class for display styling options of `BaseGeo` objects
 
-    Properties
+    Parameters
     ----------
-    label : str, default=None
-
+    label: str, default=None
+        label of the class instance, can be any string.
 
     description: dict or Description, default=None
 
@@ -139,7 +139,7 @@ class Description(MagicParameterized):
     """
     Defines properties for a description object
 
-    Properties
+    Parameters
     ----------
     text: str, default=None
         Object description text
@@ -182,7 +182,7 @@ class Model3d(MagicParameterized):
     """
     Defines properties for the 3d model representation of the magpylib objects
 
-    Properties
+    Parameters
     ----------
     showdefault: bool, default=True
         Shows/hides default 3D-model
@@ -274,7 +274,7 @@ class Trace3d(MagicParameterized):
     to the main object to be displayed and moved automatically with it. This feature also allows
     the user to replace the original 3d representation of the object
 
-    Properties
+    Parameters
     ----------
     show : bool, default=None
         shows/hides model3d object based on provided trace:
@@ -404,7 +404,7 @@ class Magnetization(MagicParameterized):
     """
     Defines magnetization styling properties
 
-    Properties
+    Parameters
     ----------
     show : bool, default=None
         if `True` shows magnetization direction based on active plotting backend
@@ -464,7 +464,7 @@ class MagnetizationColor(MagicParameterized):
 
     Note: This feature is only relevant for the plotly backend.
 
-    Properties
+    Parameters
     ----------
     north: str, default=None
         defines the color of the magnetic north pole
@@ -569,7 +569,7 @@ class MagnetProperties:
     """
     Defines the specific styling properties of objects of the `magnet` family
 
-    Properties
+    Parameters
     ----------
     magnetization: dict or Magnetization, default=None
         Magnetization styling with `'show'`, `'size'`, `'color'` properties
@@ -595,7 +595,7 @@ class Magnet(MagicParameterized, MagnetProperties):
     """
     Defines the specific styling properties of objects of the `magnet` family
 
-    Properties
+    Parameters
     ----------
     magnetization: dict or Magnetization, default=None
 
@@ -608,7 +608,7 @@ class Magnet(MagicParameterized, MagnetProperties):
 class MagnetStyle(BaseStyle, MagnetProperties):
     """Defines the styling properties of objects of the `magnet` family with base properties
 
-    Properties
+    Parameters
     ----------
     label : str, default=None
         label of the class instance, can be any string.
@@ -641,17 +641,106 @@ class MagnetStyle(BaseStyle, MagnetProperties):
         super().__init__(**kwargs)
 
 
+class ArrowCS(MagicProperties):
+    """Triple coordinate system arrow properties
+
+    Parameters
+    ----------
+    x: dict or ArrowSingle, default=None
+        x-direction `Arrowsingle` class or dict with equivalent key/value pairs
+        (e.g. `color`, `show`)
+
+    y: dict or ArrowSingle, default=None
+        y-direction `Arrowsingle` class or dict with equivalent key/value pairs
+        (e.g. `color`, `show`)
+
+    z: dict or ArrowSingle, default=None
+        z-direction `Arrowsingle` class or dict with equivalent key/value pairs
+        (e.g. `color`, `show`)
+    """
+
+    def __init__(self, x=None, y=None, z=None):
+        super().__init__(x=x, y=y, z=z)
+
+    @property
+    def x(self):
+        """`Arrowsingle` class or dict with equivalent key/value pairs (e.g. `color`, `show`)"""
+        return self._x
+
+    @x.setter
+    def x(self, val):
+        self._x = validate_property_class(val, "x", ArrowSingle, self)
+
+    @property
+    def y(self):
+        """`Arrowsingle` class or dict with equivalent key/value pairs (e.g. `color`, `show`)"""
+        return self._y
+
+    @y.setter
+    def y(self, val):
+        self._y = validate_property_class(val, "y", ArrowSingle, self)
+
+    @property
+    def z(self):
+        """`Arrowsingle` class or dict with equivalent key/value pairs (e.g. `color`, `show`)"""
+        return self._z
+
+    @z.setter
+    def z(self, val):
+        self._z = validate_property_class(val, "z", ArrowSingle, self)
+
+
+class ArrowSingle(MagicProperties):
+    """Single coordinate system arrow properties
+
+    Parameters
+    ----------
+    show: bool, default=True
+        show/hide arrow
+
+    color: color, default=None
+        valid css color. Can also be one of `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`
+    """
+    def __init__(self, show=True, color=None):
+        super().__init__(show=show, color=color)
+
+    @property
+    def show(self):
+        """show/hide arrow"""
+        return self._show
+
+    @show.setter
+    def show(self, val):
+        assert val is None or isinstance(val, bool), (
+            f"the `show` property of {type(self).__name__} must be either `True` or `False`"
+            f" but received {repr(val)} instead"
+        )
+        self._show = val
+
+    @property
+    def color(self):
+        """a valid css color. Can also be one of `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`"""
+        return self._color
+
+    @color.setter
+    def color(self, val):
+        self._color = color_validator(val, parent_name=f"{type(self).__name__}")
+
+
 class SensorProperties:
     """
     Defines the specific styling properties of objects of the `sensor` family
 
-    Properties
+    Parameters
     ----------
     size: float, default=None
         positive float for relative sensor to canvas size
 
     pixel: dict, Pixel, default=None
         `Pixel` class or dict with equivalent key/value pairs (e.g. `color`, `size`)
+
+    arrows: dict, ArrowCS, default=None
+        `ArrowCS` class or dict with equivalent key/value pairs (e.g. `color`, `size`)
     """
 
     @property
@@ -676,28 +765,40 @@ class SensorProperties:
     def pixel(self, val):
         self._pixel = validate_property_class(val, "pixel", Pixel, self)
 
+    @property
+    def arrows(self):
+        """`ArrowCS` class or dict with equivalent key/value pairs (e.g. `color`, `size`)"""
+        return self._arrows
+
+    @arrows.setter
+    def arrows(self, val):
+        self._arrows = validate_property_class(val, "arrows", ArrowCS, self)
+
 
 class Sensor(MagicParameterized, SensorProperties):
     """
     Defines the specific styling properties of objects of the `sensor` family
 
-    Properties
+    Parameters
     ----------
     size: float, default=None
         positive float for relative sensor to canvas size
 
     pixel: dict, Pixel, default=None
         `Pixel` class or dict with equivalent key/value pairs (e.g. `color`, `size`)
+
+    arrows: dict, ArrowCS, default=None
+        `ArrowCS` class or dict with equivalent key/value pairs (e.g. `color`, `size`)
     """
 
-    def __init__(self, size=None, pixel=None, **kwargs):
-        super().__init__(size=size, pixel=pixel, **kwargs)
+    def __init__(self, size=None, pixel=None, arrows=None, **kwargs):
+        super().__init__(size=size, pixel=pixel, arrows=arrows, **kwargs)
 
 
 class SensorStyle(BaseStyle, SensorProperties):
     """Defines the styling properties of objects of the `sensor` family with base properties
 
-    Properties
+    Parameters
     ----------
     label : str, default=None
         label of the class instance, can be any string.
@@ -726,6 +827,9 @@ class SensorStyle(BaseStyle, SensorProperties):
 
     pixel: dict, Pixel, default=None
         `Pixel` class or dict with equivalent key/value pairs (e.g. `color`, `size`)
+
+    arrows: dict, ArrowCS, default=None
+        `ArrowCS` class or dict with equivalent key/value pairs (e.g. `color`, `size`)
     """
 
     def __init__(self, **kwargs):
@@ -736,7 +840,7 @@ class Pixel(MagicParameterized):
     """
     Defines the styling properties of sensor pixels
 
-    Properties
+    Parameters
     ----------
     size: float, default=None
         defines the relative pixel size:
@@ -798,7 +902,7 @@ class CurrentProperties:
     """
     Defines the specific styling properties of objects of the `current` family
 
-    Properties
+    Parameters
     ----------
     arrow: dict or Arrow, default=None
         Arrow class or dict with `'show'`, `'size'` properties/keys
@@ -818,7 +922,7 @@ class Current(MagicParameterized, CurrentProperties):
     """
     Defines the specific styling properties of objects of the `current` family
 
-    Properties
+    Parameters
     ----------
     arrow: dict or Arrow, default=None
         Arrow class or dict with 'show', 'size' properties/keys
@@ -831,7 +935,7 @@ class Current(MagicParameterized, CurrentProperties):
 class CurrentStyle(BaseStyle, CurrentProperties):
     """Defines the styling properties of objects of the `current` family and base properties
 
-    Properties
+    Parameters
     ----------
     label : str, default=None
         label of the class instance, can be any string.
@@ -867,7 +971,7 @@ class Arrow(MagicParameterized):
     """
     Defines the styling properties of current arrows
 
-    Properties
+    Parameters
     ----------
     show: bool, default=None
         if `True` current direction is shown with an arrow
@@ -926,7 +1030,7 @@ class Marker(MagicParameterized):
     """
     Defines the styling properties of plot markers
 
-    Properties
+    Parameters
     ----------
     size: float, default=None
         marker size
@@ -981,7 +1085,7 @@ class Markers(BaseStyle):
     """
     Defines the styling properties of the markers trace
 
-    Properties
+    Parameters
     ----------
     marker: dict, Markers, default=None
         Markers class with 'color', 'symbol', 'size' properties, or dictionary with equivalent
@@ -1005,7 +1109,7 @@ class DipoleProperties:
     """
     Defines the specific styling properties of the objects of the `dipole` family
 
-    Properties
+    Parameters
     ----------
     size: float, default=None
         positive float for relative dipole to size to canvas size
@@ -1050,7 +1154,7 @@ class Dipole(MagicParameterized, DipoleProperties):
     """
     Defines the specific styling properties of the objects of the `dipole` family
 
-    Properties
+    Parameters
     ----------
     size: float, default=None
         positive float for relative dipole to size to canvas size
@@ -1067,7 +1171,7 @@ class Dipole(MagicParameterized, DipoleProperties):
 class DipoleStyle(BaseStyle, DipoleProperties):
     """Defines the styling properties of the objects of the `dipole` family and base properties
 
-    Properties
+    Parameters
     ----------
     label : str, default=None
         label of the class instance, can be any string.
@@ -1107,7 +1211,7 @@ class Path(MagicParameterized):
     """
     Defines the styling properties of an object's path
 
-    Properties
+    Parameters
     ----------
     marker: dict, Markers, default=None
         Markers class with 'color', 'symbol', 'size' properties, or dictionary with equivalent
@@ -1221,7 +1325,7 @@ class Line(MagicParameterized):
     """
     Defines Line styling properties
 
-    Properties
+    Parameters
     ----------
     style: str, default=None
         Can be one of:
@@ -1281,7 +1385,7 @@ class DisplayStyle(MagicParameterized):
     Base class containing styling properties for all object families. The properties of the
     sub-classes get set to hard coded defaults at class instantiation
 
-    Properties
+    Parameters
     ----------
     base: dict, Base, default=None
         base properties common to all families

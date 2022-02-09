@@ -96,8 +96,7 @@ def test_rotate_vs_rotate_from():
     bg2 = BaseGeo(position=(3, 4, 5), orientation=R.from_quat((0, 0, 0, 1)))
     angs = np.linalg.norm(roz, axis=1)
     for ang, ax in zip(angs, roz):
-        bg2.rotate_from_angax(
-            angle=[ang], degrees=False, axis=ax, anchor=(-3, -2, 1))
+        bg2.rotate_from_angax(angle=[ang], degrees=False, axis=ax, anchor=(-3, -2, 1))
     pos2 = bg2.position
     ori2 = bg2.orientation.as_quat()
 
@@ -340,14 +339,34 @@ def test_style():
 
 def test_kwargs():
     """test kwargs inputs, only relevant for styles"""
-    bg = BaseGeo((0, 0, 0), None, style=dict(label="name_01"), style_label="name_02")
-    assert bg.style.label == "name_02"
+    bg = BaseGeo((0, 0, 0), None, style=dict(label="label_01"), style_label="label_02")
+    assert bg.style.label == "label_02"
 
     with pytest.raises(TypeError):
-        bg = BaseGeo((0, 0, 0), None, styl_label="name_02")
+        bg = BaseGeo((0, 0, 0), None, styl_label="label_02")
+
 
 def test_bad_sum():
     """test when adding bad objects"""
-    cuboid = magpy.magnet.Cuboid((1,1,1),(1,1,1))
+    cuboid = magpy.magnet.Cuboid((1, 1, 1), (1, 1, 1))
     with pytest.raises(MagpylibBadUserInput):
         1 + cuboid
+
+
+def test_copy():
+    """test copying object"""
+    bg1 = BaseGeo((0, 0, 0), None, style_label='label1')
+    bg2 = BaseGeo((1,2,3), None)
+    bg1c = bg1.copy()
+    bg2c = bg2.copy(position=(10, 0, 0), style=dict(color='red'), style_color='orange')
+
+    # original object should not be affected"
+    np.testing.assert_allclose(bg1.position, (0, 0, 0))
+    np.testing.assert_allclose(bg2.position, (1 ,2, 3))
+
+    # check if label suffix iterated correctly
+    assert bg1c.style.label == "label2"
+    assert bg2c.style.label == "BaseGeo_01"
+
+    # check if style is passed correctly
+    assert bg2c.style.color == "orange"

@@ -337,7 +337,8 @@ def make_Sensor(
         else ""
     )
     name, name_suffix = get_name_and_suffix("Sensor", default_suffix, style)
-    sensor = get_sensor_mesh()
+    style_arrows = style.arrows.as_dict(flatten=True, separator='_')
+    sensor = get_sensor_mesh(**style_arrows, center_color=color)
     vertices = np.array([sensor[k] for k in "xyz"]).T
     if color is not None:
         sensor["facecolor"][sensor["facecolor"] == "rgb(238,238,238)"] = color
@@ -422,7 +423,7 @@ def _update_mag_mesh(
 
 def get_name_and_suffix(default_name, default_suffix, style):
     """provides legend entry based on name and suffix"""
-    name = default_name if style.name is None else style.name
+    name = default_name if style.label is None else style.label
     if style.description.show and style.description.text is None:
         name_suffix = default_suffix
     elif not style.description.show:
