@@ -337,7 +337,7 @@ class MagicParameterized(param.Parameterized):
                 value = list(value)
             elif isinstance(p, param.Tuple) and isinstance(value, list):
                 value = tuple(value)
-            if isinstance(value, dict) and not isinstance(p,param.Dict):
+            if isinstance(value, dict) and not isinstance(p, param.Dict):
                 self.update(**{name: value})
             else:
                 super().__setattr__(name, value)

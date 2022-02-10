@@ -68,7 +68,7 @@ def get_bad_test_data():
     bad_test_data = []
     for k, tup in bad_inputs.items():
         for v in tup:
-            bad_test_data.append((k, v, pytest.raises(ValueError)))
+            bad_test_data.append((k, v, pytest.raises(Exception)))
     return bad_test_data
 
 

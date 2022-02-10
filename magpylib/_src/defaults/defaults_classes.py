@@ -1,6 +1,7 @@
 import param
 from magpylib._src.defaults.defaults_utility import (
     MagicParameterized,
+    color_validator,
     # color_validator,
     get_defaults_dict,
     SUPPORTED_PLOTTING_BACKENDS,
@@ -16,39 +17,48 @@ class Animation(MagicParameterized):
 
     fps = param.Integer(
         default=30,
-        bounds=(0,None),
-        inclusive_bounds=(False,None),
+        bounds=(0, None),
+        inclusive_bounds=(False, None),
         doc="""Target number of frames to be displayed per second.""",
     )
 
     maxfps = param.Integer(
         default=50,
-        bounds=(0,None),
-        inclusive_bounds=(False,None),
+        bounds=(0, None),
+        inclusive_bounds=(False, None),
         doc="""Maximum number of frames to be displayed per second before downsampling kicks in.""",
     )
 
     maxframes = param.Integer(
         default=200,
-        bounds=(0,None),
-        inclusive_bounds=(False,None),
+        bounds=(0, None),
+        inclusive_bounds=(False, None),
         doc="""Maximum total number of frames to be displayed before downsampling kicks in.""",
     )
 
     time = param.Number(
         default=5,
         bounds=(0, None),
-        inclusive_bounds=(False,None),
+        inclusive_bounds=(False, None),
         doc="""Default animation time.""",
     )
 
     slider = param.Boolean(
-        default=True, doc="""Show/hide an interactive animation slider""",
+        default=True,
+        doc="""Show/hide an interactive animation slider""",
     )
 
 
 class Display(MagicParameterized):
     """Defines the display properties for the plotting features"""
+
+    def __setattr__(self, name, value):
+        if name == "colorsequence":
+            value = [
+                color_validator(v, allow_None=False, parent_name="Colorsequence")
+                for v in value
+            ]
+        return super().__setattr__(name, value)
 
     backend = param.Selector(
         default="matplotlib",
