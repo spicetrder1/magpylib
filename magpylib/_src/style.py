@@ -4,7 +4,7 @@ import param
 
 from magpylib._src.defaults.defaults_utility import (
     MagicParameterized,
-    #color_validator,
+    # color_validator,
     get_defaults_dict,
     validate_style_keys,
     SYMBOLS_MATPLOTLIB_TO_PLOTLY,
@@ -73,20 +73,20 @@ class Description(MagicParameterized):
     """Description styling properties"""
 
     show = param.Boolean(
-        default=True,
-        doc="if `True`, adds legend entry suffix based on value",
+        default=True, doc="if `True`, adds legend entry suffix based on value",
     )
     text = param.String(default=None, allow_None=True, doc="Object description text")
+
 
 class Marker(MagicParameterized):
     """Defines the styling properties of plot markers"""
 
     color = param.Color(
-            default=None,
-            allow_None=True,
-            doc="""The marker color. Must be a valid css color or one of
+        default=None,
+        allow_None=True,
+        doc="""The marker color. Must be a valid css color or one of
  `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
-        )
+    )
 
     size = param.Number(
         default=None,
@@ -101,7 +101,7 @@ class Marker(MagicParameterized):
         objects=[None] + list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys()),
         default=None,
         allow_None=True,
-        doc = f"""Marker symbol. Can be one of: {list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys())}"""
+        doc=f"""Marker symbol. Can be one of: {list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys())}""",
     )
 
 
@@ -123,7 +123,7 @@ class Line(MagicParameterized):
         objects=[None] + list(LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys()),
         default=None,
         allow_None=True,
-        doc = f"""Path line style. Can be one of: {list(LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys())}"""
+        doc=f"""Path line style. Can be one of: {list(LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys())}""",
     )
 
 
@@ -154,14 +154,15 @@ parameters.""",
 
     frames = param.List(
         item_type=int,
-        doc= """Show copies of the 3D-model along the given path indices.
+        doc="""Show copies of the 3D-model along the given path indices.
 - integer i: displays the object(s) at every i'th path position.
-- array_like shape (n,) of integers: describes certain path indices."""
+- array_like shape (n,) of integers: describes certain path indices.""",
     )
 
     numbering = param.Boolean(
         doc="""Show/hide numbering on path positions. Only applies if show=True.""",
     )
+
 
 class Trace3d(MagicParameterized):
     """
@@ -171,14 +172,13 @@ class Trace3d(MagicParameterized):
     """
 
     show = param.Boolean(
-        default=True,
-        doc="""Shows/hides model3d object based on provided trace.""",
+        default=True, doc="""Shows/hides model3d object based on provided trace.""",
     )
 
     trace = param.Dict(
         instantiate=False,
         doc="""A dictionary or callable containing the parameters to build a trace for the chosen
-backend."""
+backend.""",
     )
 
     scale = param.Number(
@@ -188,38 +188,35 @@ backend."""
         softbounds=(0.1, 5),
         doc="""Scaling factor by which the trace vertices coordinates should be multiplied by.
 Be aware that if the object is not centered at the global CS origin, its position will
-also be scaled."""
+also be scaled.""",
     )
 
     backend = param.Selector(
-        default='matplotlib',
+        default="matplotlib",
         objects=list(SUPPORTED_PLOTTING_BACKENDS),
         doc=f"""Plotting backend corresponding to the trace. Can be one of
-        {SUPPORTED_PLOTTING_BACKENDS}"""
+        {SUPPORTED_PLOTTING_BACKENDS}""",
     )
 
     coordsargs = param.Dict(
         instantiate=True,
         default={"x": "x", "y": "y", "z": "z"},
         doc="""Tells Magpylib the name of the coordinate arrays to be moved or rotated.
-by default: `{"x": "x", "y": "y", "z": "z"}`"""
+by default: `{"x": "x", "y": "y", "z": "z"}`""",
     )
 
 
 class Model3d(MagicParameterized):
     """Defines properties for the 3d model representation of the magpylib object."""
 
-    showdefault = param.Boolean(
-        default=True,
-        doc="""Shows/hides default 3D-model.""",
-    )
+    showdefault = param.Boolean(default=True, doc="""Shows/hides default 3D-model.""",)
 
     data = param.List(
         instantiate=True,
         item_type=Trace3d,
         doc="""A list of additional user-defined 3d model objects which is positioned relatively
 to the main object to be displayed and moved automatically with it. This feature also allows
-the user to replace the original 3d representation of the object"""
+the user to replace the original 3d representation of the object""",
     )
 
     def add_trace(
@@ -258,6 +255,7 @@ the user to replace the original 3d representation of the object"""
         )
         self.data = list(self.data) + [new_trace]
         return self
+
 
 class BaseStyle(MagicParameterized):
     """Base class for display styling options of `BaseGeo` objects"""
@@ -306,25 +304,25 @@ class MagnetizationColor(MagicParameterized):
     _allowed_modes = ("bicolor", "tricolor", "tricycle")
 
     north = param.Color(
-            default=None,
-            allow_None=True,
-            doc="""The color of the magnetic north pole. Must be a valid css color or one of
+        default=None,
+        allow_None=True,
+        doc="""The color of the magnetic north pole. Must be a valid css color or one of
  `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
-        )
+    )
 
     south = param.Color(
-            default=None,
-            allow_None=True,
-            doc="""The color of the magnetic south pole. Must be a valid css color or one of
+        default=None,
+        allow_None=True,
+        doc="""The color of the magnetic south pole. Must be a valid css color or one of
  `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
-        )
+    )
 
     middle = param.Color(
-            default=None,
-            allow_None=True,
-            doc="""The color between the magnetic poles. Must be a valid css color or one of
+        default=None,
+        allow_None=True,
+        doc="""The color between the magnetic poles. Must be a valid css color or one of
  `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
-        )
+    )
 
     transition = param.Number(
         default=None,
@@ -334,17 +332,17 @@ class MagnetizationColor(MagicParameterized):
         doc="""Sets the transition smoothness between poles colors. Must be between 0 and 1.
 - `transition=0`: discrete transition
 - `transition=1`: smoothest transition
-        """
+        """,
     )
 
     mode = param.Selector(
-        default='tricolor',
+        default="tricolor",
         objects=_allowed_modes,
         doc="""Sets the coloring mode for the magnetization.
 - `'bicolor'`: only north and south poles are shown, middle color is hidden.
 - `'tricolor'`: both pole colors and middle color are shown.
 - `'tricycle'`: both pole colors are shown and middle color is replaced by a color cycling
-through the color sequence."""
+through the color sequence.""",
     )
 
 
@@ -370,8 +368,9 @@ only applies if `show=True`""",
         MagnetizationColor,
         default=MagnetizationColor(),
         doc="""Color properties showing the magnetization direction (for the plotly backend),
-only applies if `show=True`"""
+only applies if `show=True`""",
     )
+
 
 class MagnetSpecific(MagicParameterized):
     """Defines the specific styling properties of objects of the `Magnet` family."""
@@ -380,8 +379,10 @@ class MagnetSpecific(MagicParameterized):
         Magnetization,
         default=Magnetization(),
         doc="""Magnetization styling with `'show'`, `'size'`, `'color'` properties or a dictionary
-with equivalent key/value pairs"""
+with equivalent key/value pairs""",
     )
+
+
 class MagnetStyle(BaseStyle, MagnetSpecific):
     """Defines the styling properties of objects of the `Magnet` family."""
 
@@ -389,17 +390,15 @@ class MagnetStyle(BaseStyle, MagnetSpecific):
 class ArrowSingle(MagicParameterized):
     """Single coordinate system arrow properties"""
 
-    show = param.Boolean(
-        default=True,
-        doc="""Show/hide single CS arrow""",
+    show = param.Boolean(default=True, doc="""Show/hide single CS arrow""",)
+
+    color = param.Color(
+        default=None,
+        allow_None=True,
+        doc="""The color of a single CS arrow. Must be a valid css color or one of
+ `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
     )
 
-    param.Color(
-            default=None,
-            allow_None=True,
-            doc="""The color of a single CS arrow. Must be a valid css color or one of
- `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
-        )
 
 class ArrowCS(MagicParameterized):
     """Triple coordinate system arrow properties"""
@@ -408,22 +407,23 @@ class ArrowCS(MagicParameterized):
         ArrowSingle,
         default=ArrowSingle(),
         doc="""`Arrowsingle` class or dict with equivalent key/value pairs for x-direction
-        (e.g. `color`, `show`)"""
+        (e.g. `color`, `show`)""",
     )
 
     y = param.ClassSelector(
         ArrowSingle,
         default=ArrowSingle(),
         doc="""`Arrowsingle` class or dict with equivalent key/value pairs for y-direction
-        (e.g. `color`, `show`)"""
+        (e.g. `color`, `show`)""",
     )
 
     z = param.ClassSelector(
         ArrowSingle,
         default=ArrowSingle(),
         doc="""`Arrowsingle` class or dict with equivalent key/value pairs for z-direction
-        (e.g. `color`, `show`)"""
+        (e.g. `color`, `show`)""",
     )
+
 
 class Pixel(MagicParameterized):
     """Defines the styling properties of sensor pixels"""
@@ -439,19 +439,21 @@ class Pixel(MagicParameterized):
 - plotly backend:  relative size to the distance of nearest neighboring pixel""",
     )
 
-    param.Color(
-            default=None,
-            allow_None=True,
-            doc="""The color of sensor pixel. Must be a valid css color or one of
+    color = param.Color(
+        default=None,
+        allow_None=True,
+        doc="""The color of sensor pixel. Must be a valid css color or one of
  `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
-        )
+    )
 
     symbol = param.Selector(
         objects=[None] + list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys()),
         default=None,
         allow_None=True,
-        doc = f"""Marker symbol. Can be one of: {list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys())}"""
+        doc=f"""Marker symbol. Can be one of: {list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys())}""",
     )
+
+
 class SensorSpecific(MagicParameterized):
     """ Defines the specific styling properties of objects of the `sensor` family"""
 
@@ -467,27 +469,24 @@ class SensorSpecific(MagicParameterized):
     arrows = param.ClassSelector(
         ArrowCS,
         default=ArrowCS(),
-        doc="""`ArrowCS` class or dict with equivalent key/value pairs (e.g. `color`, `size`)"""
+        doc="""`ArrowCS` class or dict with equivalent key/value pairs (e.g. `color`, `size`)""",
     )
 
     pixel = param.ClassSelector(
         Pixel,
         default=Pixel(),
-        doc="""`Pixel` class or dict with equivalent key/value pairs (e.g. `color`, `size`)"""
+        doc="""`Pixel` class or dict with equivalent key/value pairs (e.g. `color`, `size`)""",
     )
+
 
 class SensorStyle(BaseStyle, SensorSpecific):
     """Defines the styling properties of objects of the `sensor` family"""
 
 
-
 class CurentArrow(MagicParameterized):
     """Defines the styling properties of current arrows."""
 
-    show = param.Boolean(
-        default=True,
-        doc="""Show/hide current direction arrow""",
-    )
+    show = param.Boolean(default=True, doc="""Show/hide current direction arrow""",)
 
     size = param.Number(
         default=None,
@@ -507,6 +506,7 @@ class CurentArrow(MagicParameterized):
         doc="""The current arrow width""",
     )
 
+
 class CurrentSpecific(MagicParameterized):
     """Defines the specific styling properties of objects of the `current` family."""
 
@@ -514,8 +514,9 @@ class CurrentSpecific(MagicParameterized):
         CurentArrow,
         default=CurentArrow(),
         doc="""`CurentArrow` class or dict with equivalent key/value pairs
-(e.g. `'show'`, `'size')"""
+(e.g. `'show'`, `'size')""",
     )
+
 
 class CurrentStyle(BaseStyle, CurrentSpecific):
     """Defines the styling properties of objects of the `current` family."""
@@ -523,12 +524,14 @@ class CurrentStyle(BaseStyle, CurrentSpecific):
 
 class MarkersStyle(BaseStyle):
     """Defines the styling properties of the markers trace."""
+
     marker = param.ClassSelector(
-            Marker,
-            default=Marker(),
-            doc="""Marker class with `'color'``, 'symbol'`, `'size'` properties, or dictionary
+        Marker,
+        default=Marker(),
+        doc="""Marker class with `'color'``, 'symbol'`, `'size'` properties, or dictionary
     with equivalent key/value pairs""",
-        )
+    )
+
 
 class DipoleSpecific(MagicParameterized):
     """Defines the specific styling properties of the objects of the `dipole` family"""
@@ -545,13 +548,16 @@ class DipoleSpecific(MagicParameterized):
     )
 
     pivot = param.Selector(
-        default='middle',
+        default="middle",
         objects=_allowed_pivots,
         doc="""The part of the arrow that is anchored to the X, Y grid.
-The arrow rotates about this point. Can be one of `['tail', 'middle', 'tip']`"""
+The arrow rotates about this point. Can be one of `['tail', 'middle', 'tip']`""",
     )
+
+
 class DipoleStyle(BaseStyle, DipoleSpecific):
     """Defines the styling properties of the objects of the `dipole` family."""
+
 
 class DisplayStyle(MagicParameterized):
     """
@@ -565,39 +571,27 @@ class DisplayStyle(MagicParameterized):
         return self
 
     base = param.ClassSelector(
-        BaseStyle,
-        default=BaseStyle(),
-        doc="""Base properties common to all families"""
+        BaseStyle, default=BaseStyle(), doc="""Base properties common to all families"""
     )
 
-    magnet=param.ClassSelector(
-        MagnetSpecific,
-        default=MagnetSpecific(),
-        doc="""Magnet properties"""
+    magnet = param.ClassSelector(
+        MagnetSpecific, default=MagnetSpecific(), doc="""Magnet properties"""
     )
 
-    current=param.ClassSelector(
-        CurrentSpecific,
-        default=CurrentSpecific(),
-        doc="""Current properties"""
+    current = param.ClassSelector(
+        CurrentSpecific, default=CurrentSpecific(), doc="""Current properties"""
     )
 
-    dipole=param.ClassSelector(
-        DipoleSpecific,
-        default=DipoleSpecific(),
-        doc="""Dipole properties"""
+    dipole = param.ClassSelector(
+        DipoleSpecific, default=DipoleSpecific(), doc="""Dipole properties"""
     )
 
-    sensor=param.ClassSelector(
-        SensorSpecific,
-        default=SensorSpecific(),
-        doc="""Sensor properties"""
+    sensor = param.ClassSelector(
+        SensorSpecific, default=SensorSpecific(), doc="""Sensor properties"""
     )
 
-    markers=param.ClassSelector(
-        MarkersStyle,
-        default=MarkersStyle(),
-        doc="""Markers properties"""
+    markers = param.ClassSelector(
+        MarkersStyle, default=MarkersStyle(), doc="""Markers properties"""
     )
 
 
@@ -606,5 +600,5 @@ STYLE_CLASSES = {
     "current": CurrentStyle,
     "dipole": DipoleStyle,
     "sensor": SensorStyle,
-    "markers": MarkersStyle
+    "markers": MarkersStyle,
 }
