@@ -331,6 +331,8 @@ class MagicParameterized(param.Parameterized):
             )
         p = getattr(self.param, name, "__not_found__")
         if p != "__not_found__":
+            if isinstance(p, param.Color):
+                value = color_validator(value)
             if isinstance(value, dict) and not isinstance(p,param.Dict):
                 self.update(**{name: value})
             else:
