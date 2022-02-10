@@ -1,7 +1,7 @@
 from copy import deepcopy
 import pytest
 from magpylib._src.defaults.defaults_utility import (
-    MagicProperties,
+    MagicParameterized,
     color_validator,
     get_defaults_dict,
     update_nested_dict,
@@ -136,11 +136,11 @@ def test_bad_colors(color, allow_None, expected_exception):
         color_validator(color, allow_None=allow_None)
 
 
-def test_MagicProperties():
-    """test MagicProperties class"""
+def test_MagicParameterized():
+    """test MagicParameterized class"""
 
-    class BPsub1(MagicProperties):
-        "MagicProperties class"
+    class BPsub1(MagicParameterized):
+        "MagicParameterized class"
 
         @property
         def prop1(self):
@@ -151,8 +151,8 @@ def test_MagicProperties():
         def prop1(self, val):
             self._prop1 = val
 
-    class BPsub2(MagicProperties):
-        "MagicProperties class"
+    class BPsub2(MagicParameterized):
+        "MagicParameterized class"
 
         @property
         def prop2(self):
@@ -211,7 +211,7 @@ def test_MagicProperties():
         BPsub1(a=0)  # `a` is not a property in the class
 
     # check repr
-    assert repr(MagicProperties()) == "MagicProperties()", "repr failed"
+    assert repr(MagicParameterized()) == "MagicParameterized()", "repr failed"
 
 
 def test_get_defaults_dict():

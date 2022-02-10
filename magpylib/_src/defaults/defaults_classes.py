@@ -15,20 +15,32 @@ class Animation(MagicParameterized):
     """
 
     fps = param.Integer(
-        default=30, doc="""Target number of frames to be displayed per second.""",
+        default=30,
+        bounds=(0,None),
+        inclusive_bounds=(False,None),
+        doc="""Target number of frames to be displayed per second.""",
     )
 
     maxfps = param.Integer(
         default=50,
+        bounds=(0,None),
+        inclusive_bounds=(False,None),
         doc="""Maximum number of frames to be displayed per second before downsampling kicks in.""",
     )
 
     maxframes = param.Integer(
         default=200,
+        bounds=(0,None),
+        inclusive_bounds=(False,None),
         doc="""Maximum total number of frames to be displayed before downsampling kicks in.""",
     )
 
-    time = param.Number(default=5, doc="""Default animation time.""",)
+    time = param.Number(
+        default=5,
+        bounds=(0, None),
+        inclusive_bounds=(False,None),
+        doc="""Default animation time.""",
+    )
 
     slider = param.Boolean(
         default=True, doc="""Show/hide an interactive animation slider""",
@@ -45,8 +57,8 @@ class Display(MagicParameterized):
         {SUPPORTED_PLOTTING_BACKENDS}""",
     )
 
-    colorsequence = param.Tuple(
-        default=(
+    colorsequence = param.List(
+        default=[
             "#2E91E5",
             "#E15F99",
             "#1CA71C",
@@ -71,7 +83,7 @@ class Display(MagicParameterized):
             "#6C4516",
             "#0D2A63",
             "#AF0038",
-        ),
+        ],
         doc="""A list of color values used to cycle trough for every object displayed.
         A color and may be specified as:
       - An rgb string (e.g. 'rgb(255,0,0)')

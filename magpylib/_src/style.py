@@ -152,16 +152,48 @@ with equivalent key/value pairs""",
 parameters.""",
     )
 
-    frames = param.List(
-        item_type=int,
+    numbering = param.Boolean(
+        doc="""Show/hide numbering on path positions. Only applies if show=True.""",
+    )
+
+    frames = param.Parameter(
+        default=None,
+        allow_None=True,
+        precedence=-1,
         doc="""Show copies of the 3D-model along the given path indices.
 - integer i: displays the object(s) at every i'th path position.
 - array_like shape (n,) of integers: describes certain path indices.""",
     )
 
-    numbering = param.Boolean(
-        doc="""Show/hide numbering on path positions. Only applies if show=True.""",
-    )
+    indices = param.List(default=[], item_type=int)
+
+    step = param.Integer(default=0)
+
+    mode = param.Selector(default='indices', objects=['indices', 'step'])
+
+    @param.depends('frames', watch=True)
+    def _update_frames(self):
+        with param.parameterized.batch_call_watchers(self):
+            if isinstance(self.frames, (tuple,list)):
+                self.mode = 'indices'
+                self.indices = self.frames
+            elif isinstance(self.frames, int):
+                self.mode = 'step'
+                self.step = self.frames
+            else:
+                self.indices = self.frames
+
+    @param.depends('indices', watch=True)
+    def _update_indices(self):
+        self.frames = self.indices
+
+    @param.depends('step', watch=True)
+    def _update_step(self):
+        self.frames = self.step
+
+    @param.depends('mode', watch=True)
+    def _update_mode(self):
+        self.frames = getattr(self, self.mode)
 
 
 class Trace3d(MagicParameterized):
@@ -278,6 +310,7 @@ class BaseStyle(MagicParameterized):
     opacity = param.Number(
         default=None,
         allow_None=True,
+        bounds=(0,1),
         doc="Object opacity between 0 and 1, where 1 is fully opaque and 0 is fully transparent.",
     )
     path = param.ClassSelector(
@@ -500,7 +533,7 @@ class CurentArrow(MagicParameterized):
     width = param.Number(
         default=None,
         bounds=(0, None),
-        inclusive_bounds=(False, True),
+        inclusive_bounds=(False, None),
         softbounds=(0.5, 5),
         allow_None=True,
         doc="""The current arrow width""",

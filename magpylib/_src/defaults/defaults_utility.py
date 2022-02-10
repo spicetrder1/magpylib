@@ -333,6 +333,10 @@ class MagicParameterized(param.Parameterized):
         if p != "__not_found__":
             if isinstance(p, param.Color):
                 value = color_validator(value)
+            elif isinstance(p, param.List) and isinstance(value, tuple):
+                value = list(value)
+            elif isinstance(p, param.Tuple) and isinstance(value, list):
+                value = tuple(value)
             if isinstance(value, dict) and not isinstance(p,param.Dict):
                 self.update(**{name: value})
             else:
