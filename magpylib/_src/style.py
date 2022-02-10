@@ -530,7 +530,6 @@ class MarkersStyle(BaseStyle):
     with equivalent key/value pairs""",
         )
 
-
 class DipoleSpecific(MagicParameterized):
     """Defines the specific styling properties of the objects of the `dipole` family"""
 
