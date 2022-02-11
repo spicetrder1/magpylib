@@ -241,6 +241,11 @@ by default: `{"x": "x", "y": "y", "z": "z"}`""",
 class Model3d(MagicParameterized):
     """Defines properties for the 3d model representation of the magpylib object."""
 
+    def __setattr__(self, name, value):
+        if name=='data':
+            value = [Trace3d(v) for v in value]
+        return super().__setattr__(name, value)
+
     showdefault = param.Boolean(default=True, doc="""Shows/hides default 3D-model.""",)
 
     data = param.List(
