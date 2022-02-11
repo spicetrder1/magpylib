@@ -95,7 +95,7 @@ good_inputs = {
     "display_animation_slider": (True, False),  # bool
     "display_backend": ("matplotlib", "plotly"),  # str typo
     "display_colorsequence": (
-        ["#2E91E5", "#0D2A63"],
+        ["#2e91e5", "#0d2a63"],
     ),  # ]),  # iterable of colors
     "display_style_base_path_line_width": (0.1, 1),  # float>=0
     "display_style_base_path_line_style": LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys(),
