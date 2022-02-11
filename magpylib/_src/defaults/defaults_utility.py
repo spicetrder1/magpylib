@@ -372,6 +372,8 @@ class MagicParameterized(param.Parameterized):
         """
         if arg is None:
             arg = {}
+        elif isinstance(arg, MagicParameterized):
+            arg = arg.as_dict()
         if kwargs:
             arg.update(kwargs)
         arg = magic_to_dict(arg)
