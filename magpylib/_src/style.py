@@ -341,7 +341,7 @@ class BaseStyle(MagicParameterized):
         doc="A valid css color. Can also be one of `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.",
     )
     opacity = param.Number(
-        default=None,
+        default=1,
         allow_None=True,
         bounds=(0, 1),
         doc="Object opacity between 0 and 1, where 1 is fully opaque and 0 is fully transparent.",
