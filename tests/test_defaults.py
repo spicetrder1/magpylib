@@ -97,14 +97,14 @@ good_inputs = {
     "display_colorsequence": (
         ["#2e91e5", "#0d2a63"],
     ),  # ]),  # iterable of colors
-    "display_style_base_path_line_width": (0.1, 1),  # float>=0
+    "display_style_base_path_line_width": (0, 1),  # float>=0
     "display_style_base_path_line_style": LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys(),
     "display_style_base_path_line_color": ("blue", "#2E91E5"),  # color
-    "display_style_base_path_marker_size": (0.1, 1),  # float>=0
+    "display_style_base_path_marker_size": (0, 1),  # float>=0
     "display_style_base_path_marker_symbol": SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys(),
     "display_style_base_path_marker_color": ("blue", "#2E91E5"),  # color
     "display_style_base_path_show": (True, False),  # bool
-    "display_style_base_path_frames": (-1, [1,3]),  # int or iterable
+    "display_style_base_path_frames": (-1, (1,3)),  # int or iterable
     "display_style_base_path_numbering": (True, False),  # bool
     "display_style_base_description_show": (True, False),  # bool
     "display_style_base_description_text": ("a string",),  # string
@@ -112,7 +112,7 @@ good_inputs = {
     "display_style_base_model3d_showdefault": (True, False),
     "display_style_base_color": ("blue", "#2E91E5"),  # color
     "display_style_magnet_magnetization_show": (True, False),
-    "display_style_magnet_magnetization_size": (0.1, 1),  # float>0
+    "display_style_magnet_magnetization_size": (0, 1),  # float>0
     "display_style_magnet_magnetization_color_north": ("blue", "#2E91E5"),
     "display_style_magnet_magnetization_color_middle": ("blue", "#2E91E5"),
     "display_style_magnet_magnetization_color_south": ("blue", "#2E91E5"),
@@ -123,21 +123,21 @@ good_inputs = {
         "tricycle",
     ),
     "display_style_current_arrow_show": (True, False),
-    "display_style_current_arrow_size": (0.1, 1),  # float>=0
-    "display_style_current_arrow_width": (0.1, 1),  # float>0
-    "display_style_sensor_size": (0.1, 1),  # float>=0
+    "display_style_current_arrow_size": (0, 1),  # float>=0
+    "display_style_current_arrow_width": (0, 1),  # float>=0
+    "display_style_sensor_size": (0, 1),  # float>=0
     'display_style_sensor_arrows_x_color': ('magenta',),
     'display_style_sensor_arrows_x_show': (True, False),
     'display_style_sensor_arrows_y_color': ('yellow',),
     'display_style_sensor_arrows_y_show': (True, False),
     'display_style_sensor_arrows_z_color': ('cyan',),
     'display_style_sensor_arrows_z_show': (True, False),
-    "display_style_sensor_pixel_size": (0.1, 1),  # float>=0
+    "display_style_sensor_pixel_size": (0, 1),  # float>=0
     "display_style_sensor_pixel_color": ("blue", "#2E91E5"),
     "display_style_sensor_pixel_symbol": SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys(),
-    "display_style_dipole_size": (0.1, 1),  # float>=0
+    "display_style_dipole_size": (0, 1),  # float>=0
     "display_style_dipole_pivot": ("middle", "tail", "tip",),  # pivot middle, tail, tip
-    "display_style_markers_marker_size": (0.1, 1),  # float>=0
+    "display_style_markers_marker_size": (0, 1),  # float>=0
     "display_style_markers_marker_color": ("blue", "#2E91E5"),
     "display_style_markers_marker_symbol": SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys(),
 }

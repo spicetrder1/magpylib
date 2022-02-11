@@ -92,7 +92,7 @@ class Marker(MagicParameterized):
     size = param.Number(
         default=None,
         bounds=(0, None),
-        inclusive_bounds=(False, True),
+        inclusive_bounds=(True, True),
         softbounds=(1, 5),
         allow_None=True,
         doc="""Marker size""",
@@ -114,7 +114,7 @@ class Line(MagicParameterized):
     width = param.Number(
         default=None,
         bounds=(0, 20),
-        inclusive_bounds=(False, True),
+        inclusive_bounds=(True, True),
         softbounds=(1, 5),
         allow_None=True,
         doc="""Path line width""",
@@ -246,7 +246,7 @@ backend.""",
     scale = param.Number(
         default=1,
         bounds=(0, None),
-        inclusive_bounds=(False, False),
+        inclusive_bounds=(True, False),
         softbounds=(0.1, 5),
         doc="""Scaling factor by which the trace vertices coordinates should be multiplied by.
 Be aware that if the object is not centered at the global CS origin, its position will
@@ -526,7 +526,7 @@ class SensorSpecific(MagicParameterized):
     size = param.Number(
         default=None,
         bounds=(0, None),
-        inclusive_bounds=(False, True),
+        inclusive_bounds=(True, True),
         softbounds=(1, 5),
         allow_None=True,
         doc="""Sensor size relative to the canvas size.""",
@@ -557,7 +557,7 @@ class CurentArrow(MagicParameterized):
     size = param.Number(
         default=None,
         bounds=(0, None),
-        inclusive_bounds=(False, True),
+        inclusive_bounds=(True, True),
         softbounds=(0.5, 5),
         allow_None=True,
         doc="""The current arrow size""",
@@ -566,7 +566,7 @@ class CurentArrow(MagicParameterized):
     width = param.Number(
         default=None,
         bounds=(0, None),
-        inclusive_bounds=(False, None),
+        inclusive_bounds=(True, None),
         softbounds=(0.5, 5),
         allow_None=True,
         doc="""The current arrow width""",
@@ -607,7 +607,7 @@ class DipoleSpecific(MagicParameterized):
     size = param.Number(
         default=None,
         bounds=(0, None),
-        inclusive_bounds=(False, True),
+        inclusive_bounds=(True, True),
         softbounds=(0.5, 5),
         allow_None=True,
         doc="""The dipole arrow size relative to the canvas size""",
