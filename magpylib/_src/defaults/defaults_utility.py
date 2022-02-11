@@ -302,13 +302,12 @@ def update_with_nested_dict(parameterized, nested_dict):
     # #batch-call-watchers
     with param.parameterized.batch_call_watchers(parameterized):
         for pname, value in nested_dict.items():
-            if isinstance(getattr(parameterized, pname), param.Parameterized):
-                if isinstance(value, dict):
+            #print(pname, value, getattr(parameterized, pname))
+            if isinstance(value, dict):
+                if isinstance(getattr(parameterized, pname), param.Parameterized):
                     update_with_nested_dict(getattr(parameterized, pname), value)
-                else:
-                    setattr(parameterized, pname, value)
-            else:
-                setattr(parameterized, pname, value)
+                    continue
+            setattr(parameterized, pname, value)
 
 
 class MagicParameterized(param.Parameterized):
@@ -318,25 +317,31 @@ class MagicParameterized(param.Parameterized):
 
     def __init__(self, arg=None, **kwargs):
         super().__init__()
-        self.update(arg=arg, **kwargs)
         self._freeze()
+        self.update(arg=arg, **kwargs)
 
     def __setattr__(self, name, value):
-        if self.__isfrozen and not hasattr(self, name):
+        if self.__isfrozen and not hasattr(self, name) and not name.startswith('_'):
             raise AttributeError(
                 f"{type(self).__name__} has no property '{name}'"
                 f"\n Available properties are: {list(self.as_dict().keys())}"
             )
         p = getattr(self.param, name, "__not_found__")
         if p != "__not_found__":
+            # pylint: disable=unidiomatic-typecheck
             if isinstance(p, param.Color):
                 value = color_validator(value)
             elif isinstance(p, param.List) and isinstance(value, tuple):
                 value = list(value)
             elif isinstance(p, param.Tuple) and isinstance(value, list):
                 value = tuple(value)
-            if isinstance(value, dict) and not isinstance(p, (param.Dict, param.Parameter)):
-                self.update(**{name: value})
+            if ( # to avoid recursion, param Dict and Parameter should not be updated
+                isinstance(value, dict)
+                and not isinstance(p, (param.Dict))
+                # using unidiomatic-typecheck because all param classes are subclasses of Parameter
+                and not type(p) == param.Parameter
+            ):
+                self.update(value)
             else:
                 super().__setattr__(name, value)
         else:
