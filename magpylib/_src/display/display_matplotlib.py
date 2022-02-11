@@ -381,9 +381,8 @@ def display_matplotlib(
 
         for obj in flat_objs:
             style = get_style(obj, Config, **kwargs)
-            path_frames = style.path.frames
-            if path_frames is None:
-                path_frames = True
+            path_frames = getattr(style.path.frames, style.path.frames.mode)
+
             obj_color = style.color if style.color is not None else color
             lw = 0.25
             faces = None
@@ -498,10 +497,12 @@ def display_matplotlib(
     for sens in sensors:
         sensor, color = sens
         style = get_style(sensor, Config, **kwargs)
+        path_frames = getattr(style.path.frames, style.path.frames.mode)
         draw_sensors([sensor], ax, sys_size, path_frames, style.size, style.arrows)
     for dip in dipoles:
         dipole, color = dip
         style = get_style(dipole, Config, **kwargs)
+        path_frames = getattr(style.path.frames, style.path.frames.mode)
         draw_dipoles(
             [dipole], ax, sys_size, path_frames, style.size, color, style.pivot
         )

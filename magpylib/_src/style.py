@@ -1,6 +1,7 @@
 """Collection of classes for display styling"""
 # pylint: disable=C0302
 import param
+import numpy as np
 
 from magpylib._src.defaults.defaults_utility import (
     MagicParameterized,
@@ -127,8 +128,49 @@ class Line(MagicParameterized):
     )
 
 
+class Frames(MagicParameterized):
+    """Defines the styling properties of an object's path frames"""
+
+    indices = param.List(
+        default=[],
+        item_type=int,
+        doc="""Array_like shape (n,) of integers: describes certain path indices.""",
+    )
+
+    step = param.Integer(
+        default=0, doc="""Displays the object(s) at every i'th path position"""
+    )
+
+    mode = param.Selector(
+        default="indices",
+        objects=["indices", "step"],
+        doc="""The object path frames mode.
+- step: integer i: displays the object(s) at every i'th path position.
+- indices: array_like shape (n,) of integers: describes certain path indices.""",
+    )
+
+    @param.depends("indices", watch=True)
+    def _update_indices(self):
+        self.mode = "indices"
+
+    @param.depends("step", watch=True)
+    def _update_step(self):
+        self.mode = "step"
+
+
 class Path(MagicParameterized):
     """Defines the styling properties of an object's path"""
+
+    def __setattr__(self, name, value):
+        if name=='frames':
+            if isinstance(value, (tuple, list, np.ndarray)):
+                self.frames.indices = [int(v) for v in value]
+            elif isinstance(value, (int, np.integer)):
+                self.frames.step = value
+            else:
+                super().__setattr__(name, value)
+            return
+        return super().__setattr__(name, value)
 
     marker = param.ClassSelector(
         Marker,
@@ -156,44 +198,14 @@ parameters.""",
         doc="""Show/hide numbering on path positions. Only applies if show=True.""",
     )
 
-    frames = param.Parameter(
-        default=None,
-        allow_None=True,
-        precedence=-1,
+    frames = param.ClassSelector(
+        Frames,
+        default=Frames(),
         doc="""Show copies of the 3D-model along the given path indices.
-- integer i: displays the object(s) at every i'th path position.
-- array_like shape (n,) of integers: describes certain path indices.""",
+- mode: either `step` or `indices`.
+- step: integer i: displays the object(s) at every i'th path position.
+- indices: array_like shape (n,) of integers: describes certain path indices.""",
     )
-
-    indices = param.List(default=[], item_type=int)
-
-    step = param.Integer(default=0)
-
-    mode = param.Selector(default='indices', objects=['indices', 'step'])
-
-    @param.depends('frames', watch=True)
-    def _update_frames(self):
-        with param.parameterized.batch_call_watchers(self):
-            if isinstance(self.frames, (tuple,list)):
-                self.mode = 'indices'
-                self.indices = self.frames
-            elif isinstance(self.frames, int):
-                self.mode = 'step'
-                self.step = self.frames
-            else:
-                self.indices = self.frames
-
-    @param.depends('indices', watch=True)
-    def _update_indices(self):
-        self.frames = self.indices
-
-    @param.depends('step', watch=True)
-    def _update_step(self):
-        self.frames = self.step
-
-    @param.depends('mode', watch=True)
-    def _update_mode(self):
-        self.frames = getattr(self, self.mode)
 
 
 class Trace3d(MagicParameterized):
@@ -202,13 +214,31 @@ class Trace3d(MagicParameterized):
     to the main object to be displayed and moved automatically with it. This feature also allows
     the user to replace the original 3d representation of the object.
     """
+    def __setattr__(self, name, value):
+        if name=='coordsargs':
+            if value is None:
+                value = {"x": "x", "y": "y", "z": "z"}
+            assert isinstance(value, dict) and all(key in value for key in "xyz"), (
+                f"the `coordsargs` property of {type(self).__name__} must be "
+                f"a dictionary with `'x', 'y', 'z'` keys"
+                f" but received {repr(value)} instead"
+            )
+        elif name=='trace':
+            assert isinstance(value, dict) or callable(value), (
+                "trace must be a dictionary or a callable returning a dictionary"
+                f" but received {type(value).__name__} instead"
+            )
+            test_val = value
+            if callable(value):
+                test_val = value()
+            assert "type" in test_val, "explicit trace `type` must be defined"
+        return super().__setattr__(name, value)
 
     show = param.Boolean(
         default=True, doc="""Shows/hides model3d object based on provided trace.""",
     )
 
-    trace = param.Dict(
-        instantiate=False,
+    trace = param.Parameter(
         doc="""A dictionary or callable containing the parameters to build a trace for the chosen
 backend.""",
     )
@@ -231,7 +261,6 @@ also be scaled.""",
     )
 
     coordsargs = param.Dict(
-        instantiate=True,
         default={"x": "x", "y": "y", "z": "z"},
         doc="""Tells Magpylib the name of the coordinate arrays to be moved or rotated.
 by default: `{"x": "x", "y": "y", "z": "z"}`""",
@@ -242,14 +271,14 @@ class Model3d(MagicParameterized):
     """Defines properties for the 3d model representation of the magpylib object."""
 
     def __setattr__(self, name, value):
-        if name=='data':
-            value = [Trace3d(v) for v in value]
+        if name == "data":
+            value = [Trace3d(**v) if isinstance(v, dict) else v for v in value]
         return super().__setattr__(name, value)
 
     showdefault = param.Boolean(default=True, doc="""Shows/hides default 3D-model.""",)
 
     data = param.List(
-        instantiate=True,
+        instantiate=False,
         item_type=Trace3d,
         doc="""A list of additional user-defined 3d model objects which is positioned relatively
 to the main object to be displayed and moved automatically with it. This feature also allows
@@ -286,7 +315,6 @@ the user to replace the original 3d representation of the object""",
             that if the object is not centered at the global CS origin, its position will
             also be scaled.
         """
-
         new_trace = Trace3d(
             trace=trace, show=show, scale=scale, backend=backend, coordsargs=coordsargs,
         )
@@ -315,7 +343,7 @@ class BaseStyle(MagicParameterized):
     opacity = param.Number(
         default=None,
         allow_None=True,
-        bounds=(0,1),
+        bounds=(0, 1),
         doc="Object opacity between 0 and 1, where 1 is fully opaque and 0 is fully transparent.",
     )
     path = param.ClassSelector(

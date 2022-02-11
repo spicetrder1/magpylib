@@ -303,12 +303,10 @@ def update_with_nested_dict(parameterized, nested_dict):
     with param.parameterized.batch_call_watchers(parameterized):
         for pname, value in nested_dict.items():
             if isinstance(getattr(parameterized, pname), param.Parameterized):
-                if not isinstance(value, dict):
-                    raise ValueError(
-                        f'The nested parameterized parameter "{pname}" must be '
-                        f"updated with a dictionary, not a {type(value).__name__}."
-                    )
-                update_with_nested_dict(getattr(parameterized, pname), value)
+                if isinstance(value, dict):
+                    update_with_nested_dict(getattr(parameterized, pname), value)
+                else:
+                    setattr(parameterized, pname, value)
             else:
                 setattr(parameterized, pname, value)
 
@@ -337,7 +335,7 @@ class MagicParameterized(param.Parameterized):
                 value = list(value)
             elif isinstance(p, param.Tuple) and isinstance(value, list):
                 value = tuple(value)
-            if isinstance(value, dict) and not isinstance(p, param.Dict):
+            if isinstance(value, dict) and not isinstance(p, (param.Dict, param.Parameter)):
                 self.update(**{name: value})
             else:
                 super().__setattr__(name, value)

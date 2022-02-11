@@ -1,5 +1,6 @@
 from copy import deepcopy
 import pytest
+import param
 from magpylib._src.defaults.defaults_utility import (
     MagicParameterized,
     color_validator,
@@ -123,7 +124,7 @@ def test_good_colors(color, allow_None, color_expected):
         ((0, 0, 0, 0), False, ValueError),
         ((-1, 0, 0), False, ValueError),
         ((0, 0, 260), False, ValueError),
-        ((0, '0', 200), False, ValueError),
+        ((0, "0", 200), False, ValueError),
         ("rgb(a, 0, 260)", False, ValueError),
         ("2", False, ValueError),
         ("mybadcolor", False, ValueError),
@@ -139,31 +140,17 @@ def test_bad_colors(color, allow_None, expected_exception):
 def test_MagicParameterized():
     """test MagicParameterized class"""
 
-    class BPsub1(MagicParameterized):
-        "MagicParameterized class"
+    class MagicParm1(MagicParameterized):
+        "MagicParameterized test subclass"
 
-        @property
-        def prop1(self):
-            """prop1"""
-            return self._prop1
+        prop1 = param.Parameter()
 
-        @prop1.setter
-        def prop1(self, val):
-            self._prop1 = val
+    class MagicParm2(MagicParameterized):
+        "MagicParameterized test subclass"
 
-    class BPsub2(MagicParameterized):
-        "MagicParameterized class"
+        prop2 = param.Parameter()
 
-        @property
-        def prop2(self):
-            """prop2"""
-            return self._prop2
-
-        @prop2.setter
-        def prop2(self, val):
-            self._prop2 = val
-
-    bp1 = BPsub1(prop1=1)
+    bp1 = MagicParm1(prop1=1)
 
     # check setting attribute/property
     assert bp1.prop1 == 1, "`bp1.prop1` should be `1`"
@@ -172,7 +159,7 @@ def test_MagicParameterized():
 
     assert bp1.as_dict() == {"prop1": 1}, "`as_dict` method failed"
 
-    bp2 = BPsub2(prop2=2)
+    bp2 = MagicParm2(prop2=2)
     bp1.prop1 = bp2  # assigning class to subproperty
 
     # check as_dict method
@@ -208,10 +195,7 @@ def test_MagicParameterized():
 
     # check failing init
     with pytest.raises(AttributeError):
-        BPsub1(a=0)  # `a` is not a property in the class
-
-    # check repr
-    assert repr(MagicParameterized()) == "MagicParameterized()", "repr failed"
+        MagicParm1(a=0)  # `a` is not a property in the class
 
 
 def test_get_defaults_dict():
