@@ -335,7 +335,9 @@ class MagicParameterized(param.Parameterized):
                 value = list(value)
             elif isinstance(p, param.Tuple) and isinstance(value, list):
                 value = tuple(value)
-            if ( # to avoid recursion, param Dict and Parameter should not be updated
+            # to avoid endless recursion, `param.Dict` and `param.Parameter` should not go through
+            # the class `update` method.
+            if (
                 isinstance(value, dict)
                 and not isinstance(p, (param.Dict))
                 # using unidiomatic-typecheck because all param classes are subclasses of Parameter
