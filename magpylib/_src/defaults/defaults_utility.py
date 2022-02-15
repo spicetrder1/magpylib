@@ -359,6 +359,7 @@ class MagicParameterized(param.Parameterized):
             )
         p = getattr(self.param, name, None)
         if p is not None:
+            #pylint: disable=unidiomatic-typecheck
             if isinstance(p, param.Color):
                 value = color_validator(value)
             elif isinstance(p, param.List) and isinstance(value, tuple):
