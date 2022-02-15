@@ -365,6 +365,9 @@ class MagicParameterized(param.Parameterized):
                 value = list(value)
             elif isinstance(p, param.Tuple) and isinstance(value, list):
                 value = tuple(value)
+            if type(p) == param.ClassSelector and isinstance(value, dict):
+                self.update({name:value})
+                return
         super().__setattr__(name, value)
 
     def _freeze(self):
