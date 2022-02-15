@@ -278,7 +278,6 @@ class Model3d(MagicParameterized):
     showdefault = param.Boolean(default=True, doc="""Shows/hides default 3D-model.""",)
 
     data = param.List(
-        instantiate=False,
         item_type=Trace3d,
         doc="""A list of additional user-defined 3d model objects which is positioned relatively
 to the main object to be displayed and moved automatically with it. This feature also allows
