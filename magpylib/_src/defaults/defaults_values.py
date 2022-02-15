@@ -47,6 +47,7 @@ DEFAULTS = {
                     "frames": [],
                     "numbering": False,
                 },
+                "label": None,
                 "description": {"show": True, "text": None},
                 "opacity": 1,
                 "model3d": {"showdefault": True, "data": []},

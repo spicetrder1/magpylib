@@ -140,18 +140,18 @@ def test_bad_colors(color, allow_None, expected_exception):
 def test_MagicParameterized():
     """test MagicParameterized class"""
 
-    class MagicParm1(MagicParameterized):
+    class MagicParam1(MagicParameterized):
         "MagicParameterized test subclass"
 
         listparam = param.List()
 
-    class MagicParm2(MagicParameterized):
+    class MagicParam2(MagicParameterized):
         "MagicParameterized test subclass"
 
         tupleparam = param.Tuple(allow_None=True)
-        classselector = param.ClassSelector(MagicParm1, default=MagicParm1())
+        classselector = param.ClassSelector(MagicParam1, default=MagicParam1())
 
-    mp1 = MagicParm1(listparam=(1,))
+    mp1 = MagicParam1(listparam=(1,))
 
     # check setting attribute/property
     assert mp1.listparam == [1], "`mp1.listparam` should be `[1]`"
@@ -159,7 +159,7 @@ def test_MagicParameterized():
         setattr(mp1, "listparame", 2)  # only properties are allowed to be set
 
     # check assigning class to subproperty
-    mp2 = MagicParm2(tupleparam=[2, 2])
+    mp2 = MagicParam2(tupleparam=[2, 2])
     mp2.classselector = mp1
 
     # check as_dict method
@@ -172,7 +172,7 @@ def test_MagicParameterized():
     }, "magic property setting failed"
 
     # check wrong attribute name in nested dict
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         mp1.update(listparam=dict(tupleparam=10))
 
     # check match properties=False
@@ -181,7 +181,7 @@ def test_MagicParameterized():
     ).as_dict() == {
         "tupleparam": (2, 2),
         "classselector": {"listparam": [10]},
-    }, "magic property setting failed, should ignore `'classselector'`"
+    }, "magic property setting failed, should ignore `'prop4'`"
 
     # check replace None only
     mp2.tupleparam = None
@@ -190,7 +190,7 @@ def test_MagicParameterized():
     ).as_dict() == {
         "tupleparam": (1, 1),
         "classselector": {"listparam": [10]},
-    }, "magic property setting failed, `tupleparam` should be remained unchanged `10`"
+    }, "magic property setting failed, `tupleparam` should be remained unchanged `(1, 1)`"
 
     # check copy method
     mp3 = mp2.copy()
@@ -209,7 +209,7 @@ def test_MagicParameterized():
 
     # check failing init
     with pytest.raises(AttributeError):
-        MagicParm1(a=0)  # `a` is not a property in the class
+        MagicParam1(a=0)  # `a` is not a property in the class
 
 
 def test_get_defaults_dict():
