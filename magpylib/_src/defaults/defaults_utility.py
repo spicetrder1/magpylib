@@ -62,6 +62,55 @@ SIZE_FACTORS_MATPLOTLIB_TO_PLOTLY = {
 }
 
 
+def get_style_class(obj):
+    """returns style class based on object type. If class has no attribute `_object_type` or is
+    not found in `MAGPYLIB_FAMILIES` returns `BaseStyle` class."""
+    #pylint: disable=import-outside-toplevel
+    from magpylib._src.defaults.defaults_classes import (
+        BaseStyle,
+        MagnetStyle,
+        CurrentStyle,
+        DipoleStyle,
+        SensorStyle,
+        MarkersStyle,
+    )
+    STYLE_CLASSES = {
+        "magnet": MagnetStyle,
+        "current": CurrentStyle,
+        "dipole": DipoleStyle,
+        "sensor": SensorStyle,
+        "markers": MarkersStyle,
+    }
+    obj_type = getattr(obj, "_object_type", None)
+    style_fam = MAGPYLIB_FAMILIES.get(obj_type, None)
+    if isinstance(style_fam, (list, tuple)):
+        style_fam = style_fam[0]
+    return STYLE_CLASSES.get(style_fam, BaseStyle)
+
+
+def get_style(obj, **kwargs):
+    """
+    returns default style based on increasing priority:
+    - style from object
+    - style from kwargs arguments
+    """
+    #pylint: disable=import-outside-toplevel
+    from magpylib._src.defaults.defaults_classes import BaseStyle
+    # parse kwargs into style an non-style arguments
+    style_kwargs = kwargs.get("style", {})
+    style_kwargs.update(
+        {k[6:]: v for k, v in kwargs.items() if k.startswith("style") and k != "style"}
+    )
+    style_kwargs = validate_style_keys(style_kwargs)
+    # create style class instance and update based on kwargs
+    obj_style = getattr(obj, "style", None)
+    style = obj_style.copy() if obj_style is not None else BaseStyle()
+    style_kwargs_specific = {
+        k: v for k, v in style_kwargs.items() if k.split("_")[0] in style.as_dict()
+    }
+    style.update(**style_kwargs_specific)
+    return style
+
 def get_defaults_dict(arg=None, flatten=False, separator='.') -> dict:
     """returns default dict or sub-dict based on `arg`
 

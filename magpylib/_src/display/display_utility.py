@@ -3,7 +3,7 @@
 from typing import Tuple
 import numpy as np
 from scipy.spatial.transform import Rotation as RotScipy
-from magpylib._src.style import MarkersStyle
+from magpylib._src.defaults.defaults_classes import MarkersStyle
 
 
 class MagpyMarkers:

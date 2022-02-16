@@ -17,7 +17,7 @@ from magpylib._src.display.display_utility import (
     faces_cylinder_segment,
 )
 from magpylib._src.input_checks import check_excitations
-from magpylib._src.style import get_style
+from magpylib._src.defaults.defaults_utility import get_style
 from magpylib._src.display.display_utility import MagpyMarkers
 
 

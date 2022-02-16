@@ -148,7 +148,7 @@ class BaseGeo(BaseTransform):
         """returns style class based on object type. If class has no attribute `_object_type` or is
         not found in `MAGPYLIB_FAMILIES` returns `BaseStyle` class."""
         # pylint: disable=import-outside-toplevel
-        from magpylib._src.style import get_style_class
+        from magpylib._src.defaults.defaults_utility import get_style_class
 
         return get_style_class(self)
 

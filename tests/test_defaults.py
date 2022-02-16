@@ -1,7 +1,6 @@
 import pytest
 import magpylib as magpy
-from magpylib._src.defaults.defaults_classes import DefaultConfig
-from magpylib._src.style import DisplayStyle
+from magpylib._src.defaults.defaults_classes import DefaultConfig, DisplayStyle
 from magpylib._src.defaults.defaults_utility import (
     LINESTYLES_MATPLOTLIB_TO_PLOTLY,
     SYMBOLS_MATPLOTLIB_TO_PLOTLY,
@@ -24,7 +23,7 @@ bad_inputs = {
     "display_style_base_path_marker_symbol": ("wrongsymbol",),
     "display_style_base_path_marker_color": ("wrongcolor",),  # color
     "display_style_base_path_show": ("notbool", 1),  # bool
-    "display_style_base_path_frames": (['a'], '1'),  # int or iterable
+    "display_style_base_path_frames": (["a"], "1"),  # int or iterable
     "display_style_base_path_numbering": ("notbool",),  # bool
     "display_style_base_description_show": ("notbool",),  # bool
     "display_style_base_description_text": (
@@ -46,12 +45,12 @@ bad_inputs = {
     "display_style_current_arrow_size": (-1,),  # float>=0
     "display_style_current_arrow_width": (-1,),  # float>=0
     "display_style_sensor_size": (-1,),  # float>=0
-    'display_style_sensor_arrows_x_color': ("wrongcolor",),
-    'display_style_sensor_arrows_x_show': ("notbool",),
-    'display_style_sensor_arrows_y_color': ("wrongcolor",),
-    'display_style_sensor_arrows_y_show': ("notbool",),
-    'display_style_sensor_arrows_z_color': ("wrongcolor",),
-    'display_style_sensor_arrows_z_show': ("notbool",),
+    "display_style_sensor_arrows_x_color": ("wrongcolor",),
+    "display_style_sensor_arrows_x_show": ("notbool",),
+    "display_style_sensor_arrows_y_color": ("wrongcolor",),
+    "display_style_sensor_arrows_y_show": ("notbool",),
+    "display_style_sensor_arrows_z_color": ("wrongcolor",),
+    "display_style_sensor_arrows_z_show": ("notbool",),
     "display_style_sensor_pixel_size": (-1,),  # float>=0
     "display_style_sensor_pixel_color": ("notbool",),
     "display_style_sensor_pixel_symbol": ("wrongsymbol",),
@@ -73,7 +72,8 @@ def get_bad_test_data():
 
 
 @pytest.mark.parametrize(
-    ("key", "value", "expected_errortype"), get_bad_test_data(),
+    ("key", "value", "expected_errortype"),
+    get_bad_test_data(),
 )
 def test_defaults_bad_inputs(key, value, expected_errortype):
     """testing defaults setting on bad inputs"""
@@ -94,9 +94,7 @@ good_inputs = {
     "display_animation_maxframes": (200,),  # int>0
     "display_animation_slider": (True, False),  # bool
     "display_backend": ("matplotlib", "plotly"),  # str typo
-    "display_colorsequence": (
-        ["#2e91e5", "#0d2a63"],
-    ),  # ]),  # iterable of colors
+    "display_colorsequence": (["#2e91e5", "#0d2a63"],),  # ]),  # iterable of colors
     "display_style_base_path_line_width": (0, 1),  # float>=0
     "display_style_base_path_line_style": LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys(),
     "display_style_base_path_line_color": ("blue", "#2E91E5"),  # color
@@ -104,7 +102,7 @@ good_inputs = {
     "display_style_base_path_marker_symbol": SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys(),
     "display_style_base_path_marker_color": ("blue", "#2E91E5"),  # color
     "display_style_base_path_show": (True, False),  # bool
-    "display_style_base_path_frames": (-1, (1,3)),  # int or iterable
+    "display_style_base_path_frames": (-1, (1, 3)),  # int or iterable
     "display_style_base_path_numbering": (True, False),  # bool
     "display_style_base_description_show": (True, False),  # bool
     "display_style_base_description_text": ("a string",),  # string
@@ -126,17 +124,21 @@ good_inputs = {
     "display_style_current_arrow_size": (0, 1),  # float>=0
     "display_style_current_arrow_width": (0, 1),  # float>=0
     "display_style_sensor_size": (0, 1),  # float>=0
-    'display_style_sensor_arrows_x_color': ('magenta',),
-    'display_style_sensor_arrows_x_show': (True, False),
-    'display_style_sensor_arrows_y_color': ('yellow',),
-    'display_style_sensor_arrows_y_show': (True, False),
-    'display_style_sensor_arrows_z_color': ('cyan',),
-    'display_style_sensor_arrows_z_show': (True, False),
+    "display_style_sensor_arrows_x_color": ("magenta",),
+    "display_style_sensor_arrows_x_show": (True, False),
+    "display_style_sensor_arrows_y_color": ("yellow",),
+    "display_style_sensor_arrows_y_show": (True, False),
+    "display_style_sensor_arrows_z_color": ("cyan",),
+    "display_style_sensor_arrows_z_show": (True, False),
     "display_style_sensor_pixel_size": (0, 1),  # float>=0
     "display_style_sensor_pixel_color": ("blue", "#2E91E5"),
     "display_style_sensor_pixel_symbol": SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys(),
     "display_style_dipole_size": (0, 1),  # float>=0
-    "display_style_dipole_pivot": ("middle", "tail", "tip",),  # pivot middle, tail, tip
+    "display_style_dipole_pivot": (
+        "middle",
+        "tail",
+        "tip",
+    ),  # pivot middle, tail, tip
     "display_style_markers_marker_size": (0, 1),  # float>=0
     "display_style_markers_marker_color": ("blue", "#2E91E5"),
     "display_style_markers_marker_symbol": SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys(),
@@ -153,7 +155,8 @@ def get_good_test_data():
 
 
 @pytest.mark.parametrize(
-    ("key", "value"), get_good_test_data(),
+    ("key", "value"),
+    get_good_test_data(),
 )
 def test_defaults_good_inputs(key, value):
     """testing defaults setting on good inputs"""
@@ -163,8 +166,10 @@ def test_defaults_good_inputs(key, value):
     for v in key.split("_"):
         v0 = getattr(v0, v)
 
+
 @pytest.mark.parametrize(
-    "style_class", [
+    "style_class",
+    [
         "base",
         "base_description",
         "base_model3d",
@@ -181,13 +186,14 @@ def test_defaults_good_inputs(key, value):
         "markers_marker",
         "sensor",
         "sensor_pixel",
-    ]
+    ],
 )
 def test_bad_style_classes(style_class):
     """testing properties which take classes as properties"""
     c = DisplayStyle().reset()
     with pytest.raises(ValueError):
         c.update(**{style_class: "bad class"})
+
 
 def test_bad_default_classes():
     """testing properties which take classes as properties"""
@@ -197,6 +203,7 @@ def test_bad_default_classes():
         magpy.defaults.display.animation = "wrong input"
     with pytest.raises(ValueError):
         magpy.defaults.display.style = "wrong input"
+
 
 def test_resetting_defaults():
     """test setting and resetting the config"""
