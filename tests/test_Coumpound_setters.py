@@ -13,7 +13,7 @@ from magpylib._src.display.plotly.plotly_base_traces import make_BasePrism
 magpy.defaults.display.backend = "plotly"
 
 
-def make_wheel(Ncubes=6, height=10, diameter=36, path_len=5, label=None):
+def make_wheel(Ncubes=6, height=10, diameter=36, path_len=5, label=""):
     """creates a basic Collection Compound object with a rotary arrangement of cuboid magnets"""
     cs_lambda = lambda: magpy.magnet.Cuboid(
         (1, 0, 0), dimension=[height] * 3, position=(diameter / 2, 0, 0)

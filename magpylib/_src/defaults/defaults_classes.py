@@ -8,6 +8,8 @@ from magpylib._src.defaults.defaults_utility import (
     SYMBOLS_MATPLOTLIB_TO_PLOTLY,
     LINESTYLES_MATPLOTLIB_TO_PLOTLY,
 )
+
+
 class Description(MagicParameterized):
     """Description styling properties"""
 
@@ -15,7 +17,7 @@ class Description(MagicParameterized):
         default=True,
         doc="if `True`, adds legend entry suffix based on value",
     )
-    text = param.String(default=None, allow_None=True, doc="Object description text")
+    text = param.String(doc="Object description text")
 
 
 class Marker(MagicParameterized):
@@ -30,18 +32,15 @@ class Marker(MagicParameterized):
     )
 
     size = param.Number(
-        default=None,
+        default=1,
         bounds=(0, None),
         inclusive_bounds=(True, True),
         softbounds=(1, 5),
-        allow_None=True,
         doc="""Marker size""",
     )
 
     symbol = param.Selector(
-        objects=[None] + list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys()),
-        default=None,
-        allow_None=True,
+        objects=list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys()),
         doc=f"""Marker symbol. Can be one of: {list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys())}""",
     )
 
@@ -52,18 +51,16 @@ class Line(MagicParameterized):
     color = param.Color(default=None, allow_None=True, doc="""A valid css color""")
 
     width = param.Number(
-        default=None,
+        default=1,
         bounds=(0, 20),
         inclusive_bounds=(True, True),
         softbounds=(1, 5),
-        allow_None=True,
         doc="""Path line width""",
     )
 
     style = param.Selector(
-        objects=[None] + list(LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys()),
-        default=None,
-        allow_None=True,
+        default="solid",
+        objects=list(LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys()),
         doc=f"""
         Path line style. Can be one of:
         {list(LINESTYLES_MATPLOTLIB_TO_PLOTLY.keys())}""",
@@ -290,11 +287,7 @@ class Model3d(MagicParameterized):
 class BaseStyle(MagicParameterized):
     """Base class for display styling options of `BaseGeo` objects"""
 
-    label = param.String(
-        default=None,
-        allow_None=True,
-        doc="Label of the class instance, can be any string.",
-    )
+    label = param.String(doc="Label of the class instance, can be any string.")
     description = param.ClassSelector(
         Description,
         default=Description(),
@@ -307,7 +300,6 @@ class BaseStyle(MagicParameterized):
     )
     opacity = param.Number(
         default=1,
-        allow_None=True,
         bounds=(0, 1),
         doc="Object opacity between 0 and 1, where 1 is fully opaque and 0 is fully transparent.",
     )
@@ -338,34 +330,30 @@ class MagnetizationColor(MagicParameterized):
     _allowed_modes = ("bicolor", "tricolor", "tricycle")
 
     north = param.Color(
-        default=None,
-        allow_None=True,
+        default="red",
         doc="""
         The color of the magnetic north pole. Must be a valid css color or one of
         `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
     )
 
     south = param.Color(
-        default=None,
-        allow_None=True,
+        default="green",
         doc="""
         The color of the magnetic south pole. Must be a valid css color or one of
         `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
     )
 
     middle = param.Color(
-        default=None,
-        allow_None=True,
+        default="grey",
         doc="""
         The color between the magnetic poles. Must be a valid css color or one of
         `['r', 'g', 'b', 'y', 'm', 'c', 'k', 'w']`.""",
     )
 
     transition = param.Number(
-        default=None,
+        default=0.2,
         bounds=(0, 1),
         inclusive_bounds=(True, True),
-        allow_None=True,
         doc="""
         Sets the transition smoothness between poles colors. Must be between 0 and 1.
         - `transition=0`: discrete transition
@@ -394,11 +382,10 @@ class Magnetization(MagicParameterized):
     )
 
     size = param.Number(
-        default=None,
+        default=1,
         bounds=(0, None),
         inclusive_bounds=(True, True),
         softbounds=(1, 5),
-        allow_None=True,
         doc="""
         Arrow size of the magnetization direction (for the matplotlib backend only), only applies if
         `show=True`""",
@@ -490,11 +477,10 @@ class Pixel(MagicParameterized):
     """Defines the styling properties of sensor pixels"""
 
     size = param.Number(
-        default=None,
+        default=1,
         bounds=(0, None),
         inclusive_bounds=(True, None),
         softbounds=(0.5, 2),
-        allow_None=True,
         doc="""
         The relative pixel size.
         - matplotlib backend: pixel size is the marker size
@@ -510,9 +496,8 @@ class Pixel(MagicParameterized):
     )
 
     symbol = param.Selector(
-        objects=[None] + list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys()),
-        default=None,
-        allow_None=True,
+        default="o",
+        objects=list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys()),
         doc=f"""
         Marker symbol. Can be one of:
         {list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys())}""",
@@ -523,11 +508,10 @@ class SensorSpecific(MagicParameterized):
     """Defines the specific styling properties of objects of the `sensor` family"""
 
     size = param.Number(
-        default=None,
+        default=1,
         bounds=(0, None),
         inclusive_bounds=(True, True),
         softbounds=(1, 5),
-        allow_None=True,
         doc="""Sensor size relative to the canvas size.""",
     )
 
@@ -557,20 +541,18 @@ class CurentArrow(MagicParameterized):
     )
 
     size = param.Number(
-        default=None,
+        default=1,
         bounds=(0, None),
         inclusive_bounds=(True, True),
         softbounds=(0.5, 5),
-        allow_None=True,
         doc="""The current arrow size""",
     )
 
     width = param.Number(
-        default=None,
+        default=1,
         bounds=(0, None),
         inclusive_bounds=(True, None),
         softbounds=(0.5, 5),
-        allow_None=True,
         doc="""The current arrow width""",
     )
 
@@ -609,11 +591,10 @@ class DipoleSpecific(MagicParameterized):
     _allowed_pivots = ("tail", "middle", "tip")
 
     size = param.Number(
-        default=None,
+        default=1,
         bounds=(0, None),
         inclusive_bounds=(True, True),
         softbounds=(0.5, 5),
-        allow_None=True,
         doc="""The dipole arrow size relative to the canvas size""",
     )
 

@@ -355,20 +355,20 @@ def test_bad_sum():
 
 def test_copy():
     """test copying object"""
-    bg1 = BaseGeo((0, 0, 0), None, style_label='label1') #has style
-    bg2 = BaseGeo((1,2,3), None) # has no style
-    bg3 = BaseGeo((4,6,8), style_color='blue') # has style but label is None
+    bg1 = BaseGeo((0, 0, 0), None, style_label="label1")  # has style
+    bg2 = BaseGeo((1, 2, 3), None)  # has no style
+    bg3 = BaseGeo((4, 6, 8), style_color="blue")  # has style but label is not defined
     bg1c = bg1.copy()
-    bg2c = bg2.copy(position=(10, 0, 0), style=dict(color='red'), style_color='orange')
+    bg2c = bg2.copy(position=(10, 0, 0), style=dict(color="red"), style_color="orange")
     bg3c = bg3.copy()
 
     # original object should not be affected"
     np.testing.assert_allclose(bg1.position, (0, 0, 0))
-    np.testing.assert_allclose(bg2.position, (1 ,2, 3))
+    np.testing.assert_allclose(bg2.position, (1, 2, 3))
 
     # check if label suffix iterated correctly
     assert bg1c.style.label == "label2"
-    assert bg2c.style.label is None
+    assert bg2c.style.label == ""
     assert bg3c.style.label == "BaseGeo_01"
 
     # check if style is passed correctly

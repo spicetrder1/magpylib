@@ -21,7 +21,7 @@ from magpylib._src.exceptions import MagpylibBadUserInput
 from magpylib import _src
 from magpylib._src.defaults.defaults_classes import default_settings as Config
 from magpylib._src.display.plotly.plotly_sensor_mesh import get_sensor_mesh
-from magpylib._src.style import (
+from magpylib._src.defaults.defaults_utility import (
     get_style,
     LINESTYLES_MATPLOTLIB_TO_PLOTLY,
     SYMBOLS_MATPLOTLIB_TO_PLOTLY,
@@ -138,7 +138,12 @@ def make_Loop(
 
 
 def make_DefaultTrace(
-    obj, position=(0.0, 0.0, 0.0), orientation=None, color=None, style=None, **kwargs,
+    obj,
+    position=(0.0, 0.0, 0.0),
+    orientation=None,
+    color=None,
+    style=None,
+    **kwargs,
 ) -> dict:
     """
     Creates the plotly scatter3d parameters for an object with no specifically supported
@@ -201,7 +206,14 @@ def make_Dipole(
     orientation = orientation * mag_orient
     mag = np.array((0, 0, 1))
     return _update_mag_mesh(
-        dipole, name, name_suffix, mag, orientation, position, style, **kwargs,
+        dipole,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -222,7 +234,14 @@ def make_Cuboid(
     name, name_suffix = get_name_and_suffix("Cuboid", default_suffix, style)
     cuboid = make_BaseCuboid(dimension=dimension)
     return _update_mag_mesh(
-        cuboid, name, name_suffix, mag, orientation, position, style, **kwargs,
+        cuboid,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -244,10 +263,19 @@ def make_Cylinder(
     default_suffix = f" (D={d[0]}m, H={d[1]}m)"
     name, name_suffix = get_name_and_suffix("Cylinder", default_suffix, style)
     cylinder = make_BasePrism(
-        base_vertices=base_vertices, diameter=diameter, height=height,
+        base_vertices=base_vertices,
+        diameter=diameter,
+        height=height,
     )
     return _update_mag_mesh(
-        cylinder, name, name_suffix, mag, orientation, position, style, **kwargs,
+        cylinder,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -298,7 +326,14 @@ def make_Sphere(
     vert = min(max(vert, 3), 20)
     sphere = make_BaseEllipsoid(vert=vert, dimension=[diameter] * 3)
     return _update_mag_mesh(
-        sphere, name, name_suffix, mag, orientation, position, style, **kwargs,
+        sphere,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -337,7 +372,7 @@ def make_Sensor(
         else ""
     )
     name, name_suffix = get_name_and_suffix("Sensor", default_suffix, style)
-    style_arrows = style.arrows.as_dict(flatten=True, separator='_')
+    style_arrows = style.arrows.as_dict(flatten=True, separator="_")
     sensor = get_sensor_mesh(**style_arrows, center_color=color)
     vertices = np.array([sensor[k] for k in "xyz"]).T
     if color is not None:
@@ -413,18 +448,23 @@ def _update_mag_mesh(
                 color_south=color.south,
             )
             mesh_dict["intensity"] = getIntensity(
-                vertices=vertices, axis=magnetization,
+                vertices=vertices,
+                axis=magnetization,
             )
     mesh_dict = place_and_orient_model3d(
-        mesh_dict, orientation, position, showscale=False, name=f"{name}{name_suffix}",
+        mesh_dict,
+        orientation,
+        position,
+        showscale=False,
+        name=f"{name}{name_suffix}",
     )
     return {**mesh_dict, **kwargs}
 
 
 def get_name_and_suffix(default_name, default_suffix, style):
     """provides legend entry based on name and suffix"""
-    name = default_name if style.label is None else style.label
-    if style.description.show and style.description.text is None:
+    name = default_name if style.label.strip() == "" else style.label
+    if style.description.show and style.description.text.strip() == "":
         name_suffix = default_suffix
     elif not style.description.show:
         name_suffix = ""
@@ -516,7 +556,8 @@ def get_plotly_traces(
             make_func = make_Sensor
         elif isinstance(input_obj, Cuboid):
             kwargs.update(
-                mag=input_obj.magnetization, dimension=input_obj.dimension,
+                mag=input_obj.magnetization,
+                dimension=input_obj.dimension,
             )
             make_func = make_Cuboid
         elif isinstance(input_obj, Cylinder):
@@ -531,27 +572,33 @@ def get_plotly_traces(
         elif isinstance(input_obj, CylinderSegment):
             vert = 50
             kwargs.update(
-                mag=input_obj.magnetization, dimension=input_obj.dimension, vert=vert,
+                mag=input_obj.magnetization,
+                dimension=input_obj.dimension,
+                vert=vert,
             )
             make_func = make_CylinderSegment
         elif isinstance(input_obj, Sphere):
             kwargs.update(
-                mag=input_obj.magnetization, diameter=input_obj.diameter,
+                mag=input_obj.magnetization,
+                diameter=input_obj.diameter,
             )
             make_func = make_Sphere
         elif isinstance(input_obj, Dipole):
             kwargs.update(
-                moment=input_obj.moment, autosize=autosize,
+                moment=input_obj.moment,
+                autosize=autosize,
             )
             make_func = make_Dipole
         elif isinstance(input_obj, Line):
             kwargs.update(
-                vertices=input_obj.vertices, current=input_obj.current,
+                vertices=input_obj.vertices,
+                current=input_obj.current,
             )
             make_func = make_Line
         elif isinstance(input_obj, Loop):
             kwargs.update(
-                diameter=input_obj.diameter, current=input_obj.current,
+                diameter=input_obj.diameter,
+                current=input_obj.current,
             )
             make_func = make_Loop
         elif getattr(input_obj, "children", None) is not None:
@@ -609,7 +656,7 @@ def get_plotly_traces(
             extra_model3d_trace = merge_traces(*traces_extra)
             label = (
                 input_obj.style.label
-                if input_obj.style.label is not None
+                if input_obj.style.label.strip() != ""
                 else str(type(input_obj).__name__)
             )
             extra_model3d_trace.update(
@@ -989,7 +1036,10 @@ def animate_path(
             slider_step = {
                 "args": [
                     [str(ind + 1)],
-                    {"frame": {"duration": 0, "redraw": True}, "mode": "immediate",},
+                    {
+                        "frame": {"duration": 0, "redraw": True},
+                        "mode": "immediate",
+                    },
                 ],
                 "label": str(ind + 1),
                 "method": "animate",
@@ -1078,7 +1128,11 @@ def display_plotly(
         fig = go.Figure()
 
     # Check animation parameters
-    if isinstance(animation, numbers.Number) and not isinstance(animation, bool) and animation > 0:
+    if (
+        isinstance(animation, numbers.Number)
+        and not isinstance(animation, bool)
+        and animation > 0
+    ):
         kwargs["animation_time"] = animation
         animation = True
     elif not isinstance(animation, bool):
@@ -1110,7 +1164,7 @@ def display_plotly(
     if obj_list:
         style = getattr(obj_list[0], "style", None)
         label = getattr(style, "label", None)
-        title = label if len(obj_list) == 1 else None
+        title = label if (len(obj_list) == 1 and label is not None) else None
     else:
         title = "No objects to be displayed"
 
