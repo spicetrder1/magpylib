@@ -65,7 +65,7 @@ SIZE_FACTORS_MATPLOTLIB_TO_PLOTLY = {
 def get_style_class(obj):
     """returns style class based on object type. If class has no attribute `_object_type` or is
     not found in `MAGPYLIB_FAMILIES` returns `BaseStyle` class."""
-    #pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel
     from magpylib._src.defaults.defaults_classes import (
         BaseStyle,
         MagnetStyle,
@@ -74,6 +74,7 @@ def get_style_class(obj):
         SensorStyle,
         MarkersStyle,
     )
+
     STYLE_CLASSES = {
         "magnet": MagnetStyle,
         "current": CurrentStyle,
@@ -94,8 +95,9 @@ def get_style(obj, **kwargs):
     - style from object
     - style from kwargs arguments
     """
-    #pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel
     from magpylib._src.defaults.defaults_classes import BaseStyle
+
     # parse kwargs into style an non-style arguments
     style_kwargs = kwargs.get("style", {})
     style_kwargs.update(
@@ -111,7 +113,8 @@ def get_style(obj, **kwargs):
     style.update(**style_kwargs_specific)
     return style
 
-def get_defaults_dict(arg=None, flatten=False, separator='.') -> dict:
+
+def get_defaults_dict(arg=None, flatten=False, separator=".") -> dict:
     """returns default dict or sub-dict based on `arg`
 
     Returns
@@ -418,16 +421,19 @@ class MagicParameterized(param.Parameterized):
             )
         p = getattr(self.param, name, None)
         if p is not None:
-            #pylint: disable=unidiomatic-typecheck
+            # pylint: disable=unidiomatic-typecheck
             if isinstance(p, param.Color):
                 value = color_validator(value)
             elif isinstance(p, param.List) and isinstance(value, tuple):
                 value = list(value)
             elif isinstance(p, param.Tuple) and isinstance(value, list):
                 value = tuple(value)
-            if type(p) == param.ClassSelector and isinstance(value, dict):
-                self.update({name:value})
-                return
+            if type(p) == param.ClassSelector:
+                if isinstance(value, dict):
+                    self.update({name: value})
+                    return
+                if value is None:
+                    value = type(getattr(self, name))()
         super().__setattr__(name, value)
 
     def _freeze(self):

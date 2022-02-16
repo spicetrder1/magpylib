@@ -63,6 +63,7 @@ def test_Cuboid_display():
     """testing display"""
     magpy.defaults.display.backend = "plotly"
     src = Cuboid((1, 2, 3), (1, 2, 3))
+    src.style.magnetization = None # test when setting None
     src.move(np.linspace((0.1, 0.1, 0.1), (2, 2, 2), 20), start=-1)
     x = src.show(style_path_frames=5, style_magnetization_show=True, renderer="json")
     assert x is None, "display test fail"
