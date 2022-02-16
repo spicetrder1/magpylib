@@ -63,7 +63,8 @@ class Display(MagicParameterized):
     backend = param.Selector(
         default="matplotlib",
         objects=list(SUPPORTED_PLOTTING_BACKENDS),
-        doc=f"""Plotting backend corresponding to the trace. Can be one of
+        doc=f"""
+        Plotting backend corresponding to the trace. Can be one of
         {SUPPORTED_PLOTTING_BACKENDS}""",
     )
 
@@ -94,18 +95,20 @@ class Display(MagicParameterized):
             "#0D2A63",
             "#AF0038",
         ],
-        doc="""A list of color values used to cycle trough for every object displayed.
+        doc="""
+        A list of color values used to cycle trough for every object displayed.
         A color and may be specified as:
-      - An rgb string (e.g. 'rgb(255,0,0)')
-      - A named CSS color (e.g. 'magenta')
-      - A hex string (e.g. '#B68100')""",
+        - An rgb string (e.g. 'rgb(255,0,0)')
+        - A named CSS color (e.g. 'magenta')
+        - A hex string (e.g. '#B68100')""",
     )
 
     animation = param.ClassSelector(
         Animation,
         default=Animation(),
-        doc="""The animation properties used when `animation=True` in the `show` function.
-This settings only apply to the `plotly` plotting backend for the moment""",
+        doc="""
+        The animation properties used when `animation=True` in the `show` function. This settings
+        only apply to the `plotly` plotting backend for the moment""",
     )
 
     autosizefactor = param.Number(
@@ -113,8 +116,9 @@ This settings only apply to the `plotly` plotting backend for the moment""",
         bounds=(0, None),
         inclusive_bounds=(False, True),
         softbounds=(5, 15),
-        doc="""Defines at which scale objects like sensors and dipoles are displayed.
--> object_size = canvas_size / AUTOSIZE_FACTOR""",
+        doc="""
+        Defines at which scale objects like sensors and dipoles are displayed.
+        -> object_size = canvas_size / AUTOSIZE_FACTOR""",
     )
 
     style = param.ClassSelector(
@@ -137,30 +141,32 @@ class DefaultConfig(MagicParameterized):
         self.update(get_defaults_dict(), _match_properties=False)
         return self
 
-    #TODO: avoid setting all parameter defaults every time a value changes
-    @param.depends(*get_defaults_dict(flatten=True, separator='.').keys(), watch=True)
+    # TODO: avoid setting all parameter defaults every time a value changes
+    @param.depends(*get_defaults_dict(flatten=True, separator=".").keys(), watch=True)
     def _set_to_defaults(self):
         """Sets class defaults whenever magpylib defaults attributes as set"""
         with param.parameterized.batch_call_watchers(self):
-            for prop in get_defaults_dict(flatten=True, separator='.').keys():
-                attrib_chain = prop.split('.')
+            for prop in get_defaults_dict(flatten=True, separator=".").keys():
+                attrib_chain = prop.split(".")
                 child = attrib_chain[-1]
-                parent = self # start with self to go through dot chain
+                parent = self  # start with self to go through dot chain
                 for attrib in attrib_chain[:-1]:
                     parent = getattr(parent, attrib)
                 parent.param.set_default(child, getattr(parent, child))
 
     checkinputs = param.Boolean(
         default=True,
-        doc="""Check user input types, shapes at various stages and raise errors when they are not
-within the designated constrains.""",
+        doc="""
+        Check user input types, shapes at various stages and raise errors when they are not within
+        the designated constrains.""",
     )
 
     display = param.ClassSelector(
         Display,
         default=Display(),
-        doc="""`Display` defaults-class containing display settings.
-`(e.g. 'backend', 'animation', 'colorsequence', ...)`""",
+        doc="""
+        `Display` defaults-class containing display settings.
+        `(e.g. 'backend', 'animation', 'colorsequence', ...)`""",
     )
 
 
