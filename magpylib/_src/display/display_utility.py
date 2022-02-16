@@ -140,7 +140,7 @@ def draw_arrowed_circle(current, diameter, arrow_size, vert):
     return vertices
 
 
-def get_rot_pos_from_path(obj, show_path=None):
+def get_pos_orient_from_path_frames(obj, frames=None):
     """
     subsets orientations and positions depending on `show_path` value.
     examples:
@@ -149,8 +149,7 @@ def get_rot_pos_from_path(obj, show_path=None):
     """
     # pylint: disable=protected-access
     # pylint: disable=invalid-unary-operand-type
-    if show_path is None:
-        show_path = True
+    print(frames)
     pos = getattr(obj, "_position", None)
     if pos is None:
         pos = obj.position
@@ -162,12 +161,10 @@ def get_rot_pos_from_path(obj, show_path=None):
         orient = RotScipy.from_rotvec([[0, 0, 1]])
     pos = np.array([pos]) if pos.ndim == 1 else pos
     path_len = pos.shape[0]
-    if show_path is True or show_path is False or show_path==0:
-        inds = np.array([-1])
-    elif isinstance(show_path, int):
-        inds = np.arange(path_len, dtype=int)[::-show_path]
-    elif hasattr(show_path, "__iter__") and not isinstance(show_path, str):
-        inds = np.array(show_path)
+    if isinstance(frames, int):
+        inds = np.arange(path_len, dtype=int)[::-frames]
+    elif hasattr(frames, "__iter__") and not isinstance(frames, str):
+        inds = np.array(frames)
     inds[inds >= path_len] = path_len - 1
     inds = np.unique(inds)
     if inds.size == 0:
@@ -200,7 +197,7 @@ def faces_cuboid(src, show_path):
     )
     vert0 = vert0 - src.dimension / 2
 
-    rots, poss = get_rot_pos_from_path(src, show_path)
+    rots, poss = get_pos_orient_from_path_frames(src, show_path)
 
     faces = []
     for rot, pos in zip(rots, poss):
@@ -253,7 +250,7 @@ def faces_cylinder(src, show_path):
     ]
 
     # add src attributes position and orientation depending on show_path
-    rots, poss = get_rot_pos_from_path(src, show_path)
+    rots, poss = get_pos_orient_from_path_frames(src, show_path)
 
     # all faces (incl. along path) adding pos and rot
     all_faces = []
@@ -334,7 +331,7 @@ def faces_cylinder_segment(src, show_path):
     ]
 
     # add src attributes position and orientation depending on show_path
-    rots, poss = get_rot_pos_from_path(src, show_path)
+    rots, poss = get_pos_orient_from_path_frames(src, show_path)
 
     # all faces (incl. along path) adding pos and rot
     all_faces = []
@@ -388,7 +385,7 @@ def faces_sphere(src, show_path):
     ]
 
     # add src attributes position and orientation depending on show_path
-    rots, poss = get_rot_pos_from_path(src, show_path)
+    rots, poss = get_pos_orient_from_path_frames(src, show_path)
 
     # all faces (incl. along path) adding pos and rot
     all_faces = []

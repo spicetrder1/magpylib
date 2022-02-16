@@ -14,7 +14,7 @@ def test_Cylinder_display():
     magpy.defaults.display.backend = "plotly"
     fig = go.Figure()
     src = Cylinder((1, 2, 3), (1, 2))
-    src.style.description = dict(text="desc", show=True)
+    src.style.description = dict(text="desc", show=False)
     x = src.show(canvas=fig, style_path_frames=15)
     assert x is None, "path should revert to True"
 

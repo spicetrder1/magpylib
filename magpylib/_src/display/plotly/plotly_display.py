@@ -27,7 +27,7 @@ from magpylib._src.defaults.defaults_utility import (
     SYMBOLS_MATPLOTLIB_TO_PLOTLY,
 )
 from magpylib._src.display.display_utility import (
-    get_rot_pos_from_path,
+    get_pos_orient_from_path_frames,
     MagpyMarkers,
     draw_arrow_from_vertices,
     draw_arrowed_circle,
@@ -616,7 +616,7 @@ def get_plotly_traces(
             t for t in extra_model3d_traces if t.backend == "plotly"
         ]
         path_frames = getattr(style.path.frames, style.path.frames.mode)
-        for orient, pos in zip(*get_rot_pos_from_path(input_obj, path_frames)):
+        for orient, pos in zip(*get_pos_orient_from_path_frames(input_obj, path_frames)):
             if style.model3d.showdefault and make_func is not None:
                 path_traces.append(
                     make_func(position=pos, orientation=orient, **kwargs)

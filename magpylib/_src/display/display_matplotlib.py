@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from magpylib._src.defaults.defaults_classes import default_settings as Config
 from magpylib._src.display.display_utility import (
-    get_rot_pos_from_path,
+    get_pos_orient_from_path_frames,
     draw_arrow_from_vertices,
     draw_arrowed_circle,
     place_and_orient_model3d,
@@ -21,7 +21,7 @@ from magpylib._src.defaults.defaults_utility import get_style
 from magpylib._src.display.display_utility import MagpyMarkers
 
 
-def draw_directs_faced(faced_objects, colors, ax, show_path, size_direction):
+def draw_directs_faced(faced_objects, colors, ax, frames, size_direction):
     """draw direction of magnetization of faced magnets
 
     Parameters
@@ -29,15 +29,15 @@ def draw_directs_faced(faced_objects, colors, ax, show_path, size_direction):
     - faced_objects(list of src objects): with magnetization vector to be drawn
     - colors: colors of faced_objects
     - ax(Pyplot 3D axis): to draw in
-    - show_path(bool or int): draw on every position where object is displayed
+    - frames(list or int): draw on every position where object is displayed
     """
     # pylint: disable=protected-access
     # pylint: disable=too-many-branches
     points = []
     for col, obj in zip(colors, faced_objects):
 
-        # add src attributes position and orientation depending on show_path
-        rots, poss = get_rot_pos_from_path(obj, show_path)
+        # add src attributes position and orientation depending on frames
+        rots, poss = get_pos_orient_from_path_frames(obj, frames)
 
         # vector length, color and magnetization
         if obj._object_type in ("Cuboid", "Cylinder"):
@@ -136,14 +136,14 @@ def draw_faces(faces, col, lw, alpha, ax):
     return faces
 
 
-def draw_pixel(sensors, ax, col, pixel_col, pixel_size, pixel_symb, show_path):
+def draw_pixel(sensors, ax, col, pixel_col, pixel_size, pixel_symb, frames):
     """draw pixels and return a list of pixel-points in global CS"""
     # pylint: disable=protected-access
 
     # collect sensor and pixel positions in global CS
     pos_sens, pos_pixel = [], []
     for sens in sensors:
-        rots, poss = get_rot_pos_from_path(sens, show_path)
+        rots, poss = get_pos_orient_from_path_frames(sens, frames)
 
         pos_pixel_flat = np.reshape(sens.pixel, (-1, 3))
 
@@ -173,7 +173,7 @@ def draw_pixel(sensors, ax, col, pixel_col, pixel_size, pixel_symb, show_path):
     return list(pos_all)
 
 
-def draw_sensors(sensors, ax, sys_size, show_path, size, arrows_style):
+def draw_sensors(sensors, ax, sys_size, frames, size, arrows_style):
     """draw sensor cross"""
     # pylint: disable=protected-access
     arrowlength = sys_size * size / Config.display.autosizefactor
@@ -181,7 +181,7 @@ def draw_sensors(sensors, ax, sys_size, show_path, size, arrows_style):
     # collect plot data
     possis, exs, eys, ezs = [], [], [], []
     for sens in sensors:
-        rots, poss = get_rot_pos_from_path(sens, show_path)
+        rots, poss = get_pos_orient_from_path_frames(sens, frames)
 
         for rot, pos in zip(rots, poss):
             possis += [pos]
@@ -213,14 +213,14 @@ def draw_sensors(sensors, ax, sys_size, show_path, size, arrows_style):
                 )
 
 
-def draw_dipoles(dipoles, ax, sys_size, show_path, size, color, pivot):
+def draw_dipoles(dipoles, ax, sys_size, frames, size, color, pivot):
     """draw dipoles"""
     # pylint: disable=protected-access
 
     # collect plot data
     possis, moms = [], []
     for dip in dipoles:
-        rots, poss = get_rot_pos_from_path(dip, show_path)
+        rots, poss = get_pos_orient_from_path_frames(dip, frames)
 
         mom = dip.moment / np.linalg.norm(dip.moment)
 
@@ -246,7 +246,7 @@ def draw_dipoles(dipoles, ax, sys_size, show_path, size, color, pivot):
     )
 
 
-def draw_circular(circulars, show_path, col, size, width, ax):
+def draw_circular(circulars, frames, col, size, width, ax):
     """draw circulars and return a list of positions"""
     # pylint: disable=protected-access
 
@@ -257,8 +257,8 @@ def draw_circular(circulars, show_path, col, size, width, ax):
     draw_pos = []  # line positions
     for circ in circulars:
 
-        # add src attributes position and orientation depending on show_path
-        rots, poss = get_rot_pos_from_path(circ, show_path)
+        # add src attributes position and orientation depending on frames
+        rots, poss = get_pos_orient_from_path_frames(circ, frames)
 
         # init orientation line positions
         vertices = draw_arrowed_circle(circ.current, circ.diameter, size, discret).T
@@ -271,7 +271,7 @@ def draw_circular(circulars, show_path, col, size, width, ax):
     return draw_pos
 
 
-def draw_line(lines, show_path, col, size, width, ax) -> list:
+def draw_line(lines, frames, col, size, width, ax) -> list:
     """draw lines and return a list of positions"""
     # pylint: disable=protected-access
 
@@ -281,8 +281,8 @@ def draw_line(lines, show_path, col, size, width, ax) -> list:
     draw_pos = []  # line positions
     for line in lines:
 
-        # add src attributes position and orientation depending on show_path
-        rots, poss = get_rot_pos_from_path(line, show_path)
+        # add src attributes position and orientation depending on frames
+        rots, poss = get_pos_orient_from_path_frames(line, frames)
 
         # init orientation line positions
         if size != 0:
@@ -298,7 +298,7 @@ def draw_line(lines, show_path, col, size, width, ax) -> list:
     return draw_pos
 
 
-def draw_model3d_extra(obj, style, show_path, ax, color):
+def draw_model3d_extra(obj, style, frames, ax, color):
     """positions, orients and draws extra 3d model including path positions
     returns True if at least one the traces is now new default"""
     extra_model3d_traces = style.model3d.data if style.model3d.data is not None else []
@@ -307,7 +307,7 @@ def draw_model3d_extra(obj, style, show_path, ax, color):
     ]
     path_traces_extra = {}
     points = []
-    for orient, pos in zip(*get_rot_pos_from_path(obj, show_path)):
+    for orient, pos in zip(*get_pos_orient_from_path_frames(obj, frames)):
         for extr in extra_model3d_traces:
             obj_extra_trace = extr.trace() if callable(extr.trace) else extr.trace
             if extr.show:

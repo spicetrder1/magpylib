@@ -136,9 +136,9 @@ def test_circular_line_display():
     assert x is None, "display test fail"
     x = src2.show(canvas=ax2)
     assert x is None, "display test fail"
-    x = src3.show(canvas=ax2, style_arrow_size=0.1)
+    x = src3.show(canvas=ax2, style_arrow_size=0)
     assert x is None, "display test fail"
-    x = src4.show(canvas=ax2, style_path_frames=2)
+    x = src4.show(canvas=ax2, style_path_frames=0)
     assert x is None, "display test fail"
 
 
