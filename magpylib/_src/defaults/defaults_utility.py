@@ -62,13 +62,21 @@ SIZE_FACTORS_MATPLOTLIB_TO_PLOTLY = {
 }
 
 
-def get_defaults_dict(arg=None) -> dict:
+def get_defaults_dict(arg=None, flatten=False, separator='.') -> dict:
     """returns default dict or sub-dict based on `arg`
 
     Returns
     -------
     dict
         default sub dict
+
+    flatten: bool
+        If `True`, the nested dictionary gets flatten out with provided separator for the
+        dictionary keys
+
+    separator: str
+        the separator to be used when flattening the dictionary. Only applies if
+        `flatten=True`
 
     Examples
     --------
@@ -77,8 +85,10 @@ def get_defaults_dict(arg=None) -> dict:
 
     dict_ = deepcopy(DEFAULTS)
     if arg is not None:
-        for v in arg.split("."):
+        for v in arg.split(separator):
             dict_ = dict_[v]
+    if flatten:
+        dict_ = linearize_dict(dict_, separator=separator)
     return dict_
 
 

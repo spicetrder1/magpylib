@@ -25,10 +25,9 @@ def get_style_class(obj):
     return STYLE_CLASSES.get(style_fam, BaseStyle)
 
 
-def get_style(obj, default_settings, **kwargs):
+def get_style(obj, **kwargs):
     """
     returns default style based on increasing priority:
-    - style from defaults
     - style from object
     - style from kwargs arguments
     """
@@ -37,36 +36,14 @@ def get_style(obj, default_settings, **kwargs):
     style_kwargs.update(
         {k[6:]: v for k, v in kwargs.items() if k.startswith("style") and k != "style"}
     )
-
-    # retrieve default style dictionary, local import to avoid circular import
-    # pylint: disable=import-outside-toplevel
-
-    styles_by_family = default_settings.display.style.as_dict()
-
-    # construct object specific dictionary base on style family and default style
-    obj_type = getattr(obj, "_object_type", None)
-    obj_families = MAGPYLIB_FAMILIES.get(obj_type, [])
-
-    obj_style_default_dict = {
-        **styles_by_family["base"],
-        **{
-            k: v
-            for fam in obj_families
-            for k, v in styles_by_family.get(fam, {}).items()
-        },
-    }
     style_kwargs = validate_style_keys(style_kwargs)
-    # create style class instance and update based on precedence
+    # create style class instance and update based on kwargs
     obj_style = getattr(obj, "style", None)
     style = obj_style.copy() if obj_style is not None else BaseStyle()
     style_kwargs_specific = {
         k: v for k, v in style_kwargs.items() if k.split("_")[0] in style.as_dict()
     }
-    style.update(**style_kwargs_specific, _match_properties=True)
-    style.update(
-        **obj_style_default_dict, _match_properties=False, _replace_None_only=True
-    )
-
+    style.update(**style_kwargs_specific)
     return style
 
 
@@ -162,7 +139,7 @@ class Path(MagicParameterized):
     """Defines the styling properties of an object's path"""
 
     def __setattr__(self, name, value):
-        if name=='frames':
+        if name == "frames":
             if isinstance(value, (tuple, list, np.ndarray)):
                 self.frames.indices = [int(v) for v in value]
             elif isinstance(value, (int, np.integer)):
@@ -214,8 +191,9 @@ class Trace3d(MagicParameterized):
     to the main object to be displayed and moved automatically with it. This feature also allows
     the user to replace the original 3d representation of the object.
     """
+
     def __setattr__(self, name, value):
-        if name=='coordsargs':
+        if name == "coordsargs":
             if value is None:
                 value = {"x": "x", "y": "y", "z": "z"}
             assert isinstance(value, dict) and all(key in value for key in "xyz"), (
@@ -223,7 +201,7 @@ class Trace3d(MagicParameterized):
                 f"a dictionary with `'x', 'y', 'z'` keys"
                 f" but received {repr(value)} instead"
             )
-        elif name=='trace':
+        elif name == "trace":
             assert isinstance(value, dict) or callable(value), (
                 "trace must be a dictionary or a callable returning a dictionary"
                 f" but received {type(value).__name__} instead"
@@ -465,26 +443,38 @@ class ArrowSingle(MagicParameterized):
     )
 
 
+class ArrowX(ArrowSingle):
+    """Single coordinate system x-arrow properties"""
+
+
+class ArrowY(ArrowSingle):
+    """Single coordinate system y-arrow properties"""
+
+
+class ArrowZ(ArrowSingle):
+    """Single coordinate system z-arrow properties"""
+
+
 class ArrowCS(MagicParameterized):
     """Triple coordinate system arrow properties"""
 
     x = param.ClassSelector(
-        ArrowSingle,
-        default=ArrowSingle(),
+        ArrowX,
+        default=ArrowX(),
         doc="""`Arrowsingle` class or dict with equivalent key/value pairs for x-direction
         (e.g. `color`, `show`)""",
     )
 
     y = param.ClassSelector(
-        ArrowSingle,
-        default=ArrowSingle(),
+        ArrowY,
+        default=ArrowY(),
         doc="""`Arrowsingle` class or dict with equivalent key/value pairs for y-direction
         (e.g. `color`, `show`)""",
     )
 
     z = param.ClassSelector(
-        ArrowSingle,
-        default=ArrowSingle(),
+        ArrowZ,
+        default=ArrowZ(),
         doc="""`Arrowsingle` class or dict with equivalent key/value pairs for z-direction
         (e.g. `color`, `show`)""",
     )

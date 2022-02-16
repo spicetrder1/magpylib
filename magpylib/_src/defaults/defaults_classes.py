@@ -127,15 +127,28 @@ This settings only apply to the `plotly` plotting backend for the moment""",
 class DefaultConfig(MagicParameterized):
     """Library default settings. All default values get reset at class instantiation."""
 
-    def __init__(self, *args, reset=True, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if reset:
+        with param.parameterized.batch_call_watchers(self):
             self.reset()
 
     def reset(self):
         """Resets all nested properties to their hard coded default values"""
         self.update(get_defaults_dict(), _match_properties=False)
         return self
+
+    #TODO: avoid setting all parameter defaults every time a value changes
+    @param.depends(*get_defaults_dict(flatten=True, separator='.').keys(), watch=True)
+    def _set_to_defaults(self):
+        """Sets class defaults whenever magpylib defaults attributes as set"""
+        with param.parameterized.batch_call_watchers(self):
+            for prop in get_defaults_dict(flatten=True, separator='.').keys():
+                attrib_chain = prop.split('.')
+                child = attrib_chain[-1]
+                parent = self # start with self to go through dot chain
+                for attrib in attrib_chain[:-1]:
+                    parent = getattr(parent, attrib)
+                parent.param.set_default(child, getattr(parent, child))
 
     checkinputs = param.Boolean(
         default=True,

@@ -380,7 +380,7 @@ def display_matplotlib(
                 )
 
         for obj in flat_objs:
-            style = get_style(obj, Config, **kwargs)
+            style = get_style(obj, **kwargs)
             path_frames = getattr(style.path.frames, style.path.frames.mode)
 
             obj_color = style.color if style.color is not None else color
@@ -471,7 +471,7 @@ def display_matplotlib(
     # markers -------------------------------------------------------
     if markers is not None and markers:
         m = MagpyMarkers()
-        style = get_style(m, Config, **kwargs)
+        style = get_style(m, **kwargs)
         markers = np.array(markers)
         s = style.marker
         draw_markers(markers, ax, s.color, s.symbol, s.size)
@@ -496,12 +496,12 @@ def display_matplotlib(
     # not optimal for loop if many sensors/dipoles
     for sens in sensors:
         sensor, color = sens
-        style = get_style(sensor, Config, **kwargs)
+        style = get_style(sensor, **kwargs)
         path_frames = getattr(style.path.frames, style.path.frames.mode)
         draw_sensors([sensor], ax, sys_size, path_frames, style.size, style.arrows)
     for dip in dipoles:
         dipole, color = dip
-        style = get_style(dipole, Config, **kwargs)
+        style = get_style(dipole, **kwargs)
         path_frames = getattr(style.path.frames, style.path.frames.mode)
         draw_dipoles(
             [dipole], ax, sys_size, path_frames, style.size, color, style.pivot
