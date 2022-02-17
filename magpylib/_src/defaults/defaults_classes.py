@@ -109,7 +109,7 @@ class Path(MagicParameterized):
             else:
                 super().__setattr__(name, value)
             return
-        return super().__setattr__(name, value)
+        super().__setattr__(name, value)
 
     marker = param.ClassSelector(
         Marker,
@@ -768,7 +768,8 @@ class DefaultConfig(MagicParameterized):
                 parent = getattr(parent, attrib)
             parent.param.watch(self._set_to_defaults, parameter_names=[child])
 
-    def _set_to_defaults(self, event):
+    @staticmethod
+    def _set_to_defaults(event):
         """Sets class defaults whenever magpylib defaults attributes as set"""
         event.obj.param.set_default(event.name, event.new)
 

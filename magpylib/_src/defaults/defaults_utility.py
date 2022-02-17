@@ -1,5 +1,5 @@
 """utilities for creating property classes"""
-
+# pylint: disable=cyclic-import
 from copy import deepcopy
 import collections.abc
 import param
