@@ -43,6 +43,9 @@ class Marker(MagicParameterized):
         doc=f"""Marker symbol. Can be one of: {list(SYMBOLS_MATPLOTLIB_TO_PLOTLY.keys())}""",
     )
 
+class PathMarker(Marker):
+    """Defines the styling properties of path plot markers"""
+
 
 class Line(MagicParameterized):
     """Defines Line styling properties"""
@@ -113,7 +116,7 @@ class Path(MagicParameterized):
 
     marker = param.ClassSelector(
         Marker,
-        default=Marker(),
+        default=PathMarker(),
         doc="""
         Marker class with `'color'``, 'symbol'`, `'size'` properties, or dictionary with equivalent
         key/value pairs""",
