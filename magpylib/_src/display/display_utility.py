@@ -149,7 +149,6 @@ def get_pos_orient_from_path_frames(obj, frames=None):
     """
     # pylint: disable=protected-access
     # pylint: disable=invalid-unary-operand-type
-    print(frames)
     pos = getattr(obj, "_position", None)
     if pos is None:
         pos = obj.position
