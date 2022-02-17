@@ -14,8 +14,7 @@ class Description(MagicParameterized):
     """Description styling properties"""
 
     show = param.Boolean(
-        default=True,
-        doc="if `True`, adds legend entry suffix based on value",
+        default=True, doc="if `True`, adds legend entry suffix based on value",
     )
     text = param.String(doc="Object description text")
 
@@ -180,8 +179,7 @@ class Trace3d(MagicParameterized):
         return super().__setattr__(name, value)
 
     show = param.Boolean(
-        default=True,
-        doc="""Shows/hides model3d object based on provided trace.""",
+        default=True, doc="""Shows/hides model3d object based on provided trace.""",
     )
 
     trace = param.Parameter(
@@ -225,10 +223,7 @@ class Model3d(MagicParameterized):
             value = [Trace3d(**v) if isinstance(v, dict) else v for v in value]
         return super().__setattr__(name, value)
 
-    showdefault = param.Boolean(
-        default=True,
-        doc="""Shows/hides default 3D-model.""",
-    )
+    showdefault = param.Boolean(default=True, doc="""Shows/hides default 3D-model.""",)
 
     data = param.List(
         item_type=Trace3d,
@@ -239,12 +234,7 @@ class Model3d(MagicParameterized):
     )
 
     def add_trace(
-        self,
-        trace,
-        show=True,
-        backend="matplotlib",
-        coordsargs=None,
-        scale=1,
+        self, trace, show=True, backend="matplotlib", coordsargs=None, scale=1,
     ):
         """creates an additional user-defined 3d model object which is positioned relatively
         to the main object to be displayed and moved automatically with it. This feature also allows
@@ -274,11 +264,7 @@ class Model3d(MagicParameterized):
             also be scaled.
         """
         new_trace = Trace3d(
-            trace=trace,
-            show=show,
-            scale=scale,
-            backend=backend,
-            coordsargs=coordsargs,
+            trace=trace, show=show, scale=scale, backend=backend, coordsargs=coordsargs,
         )
         self.data = list(self.data) + [new_trace]
         return self
@@ -419,10 +405,7 @@ class MagnetStyle(BaseStyle, MagnetSpecific):
 class ArrowSingle(MagicParameterized):
     """Single coordinate system arrow properties"""
 
-    show = param.Boolean(
-        default=True,
-        doc="""Show/hide single CS arrow""",
-    )
+    show = param.Boolean(default=True, doc="""Show/hide single CS arrow""",)
 
     color = param.Color(
         default=None,
@@ -535,10 +518,7 @@ class SensorStyle(BaseStyle, SensorSpecific):
 class CurentArrow(MagicParameterized):
     """Defines the styling properties of current arrows."""
 
-    show = param.Boolean(
-        default=True,
-        doc="""Show/hide current direction arrow""",
-    )
+    show = param.Boolean(default=True, doc="""Show/hide current direction arrow""",)
 
     size = param.Number(
         default=1,
@@ -681,8 +661,7 @@ class Animation(MagicParameterized):
     )
 
     slider = param.Boolean(
-        default=True,
-        doc="""Show/hide an interactive animation slider""",
+        default=True, doc="""Show/hide an interactive animation slider""",
     )
 
 
@@ -770,6 +749,7 @@ class DefaultConfig(MagicParameterized):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._declare_watchers()
         with param.parameterized.batch_call_watchers(self):
             self.reset()
 
@@ -778,18 +758,19 @@ class DefaultConfig(MagicParameterized):
         self.update(get_defaults_dict(), _match_properties=False)
         return self
 
-    # TODO: avoid setting all parameter defaults every time a value changes
-    @param.depends(*get_defaults_dict(flatten=True, separator=".").keys(), watch=True)
-    def _set_to_defaults(self):
+    def _declare_watchers(self):
+        props = get_defaults_dict(flatten=True, separator=".").keys()
+        for prop in props:
+            attrib_chain = prop.split(".")
+            child = attrib_chain[-1]
+            parent = self  # start with self to go through dot chain
+            for attrib in attrib_chain[:-1]:
+                parent = getattr(parent, attrib)
+            parent.param.watch(self._set_to_defaults, parameter_names=[child])
+
+    def _set_to_defaults(self, event):
         """Sets class defaults whenever magpylib defaults attributes as set"""
-        with param.parameterized.batch_call_watchers(self):
-            for prop in get_defaults_dict(flatten=True, separator=".").keys():
-                attrib_chain = prop.split(".")
-                child = attrib_chain[-1]
-                parent = self  # start with self to go through dot chain
-                for attrib in attrib_chain[:-1]:
-                    parent = getattr(parent, attrib)
-                parent.param.set_default(child, getattr(parent, child))
+        event.obj.param.set_default(event.name, event.new)
 
     checkinputs = param.Boolean(
         default=True,
