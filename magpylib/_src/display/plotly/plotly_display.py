@@ -819,6 +819,8 @@ def animate_path(
     animation_maxfps=50,
     animation_maxframes=200,
     animation_slider=False,
+    row=None,
+    col=None,
     **kwargs,
 ):
     """This is a helper function which attaches plotly frames to the provided `fig` object
@@ -997,7 +999,8 @@ def animate_path(
 
     # update fig
     fig.frames = frames
-    fig.add_traces(frames[0].data)
+    fig.add_traces(frames[0].data, rows=row, cols=col)
+    clean_legendgroups(fig)
     fig.update_layout(
         height=None,
         title=title,
@@ -1015,6 +1018,8 @@ def display_plotly(
     renderer=None,
     animation=False,
     color_sequence=None,
+    row=None,
+    col=None,
     **kwargs,
 ):
 
@@ -1128,14 +1133,26 @@ def display_plotly(
                 color_sequence=color_sequence,
                 zoom=zoom,
                 title=title,
+                row=row,
+                col=col,
                 **kwargs,
             )
         else:
             traces_dicts = draw_frame(obj_list, color_sequence, zoom, **kwargs)
             traces = [t for traces in traces_dicts.values() for t in traces]
-            fig.add_traces(traces)
+            fig.add_traces(traces, rows=row, cols=col)
+            clean_legendgroups(fig)
             fig.update_layout(title_text=title)
             apply_fig_ranges(fig, zoom=zoom)
         fig.update_layout(legend_itemsizing="constant")
     if show_fig:
         fig.show(renderer=renderer)
+
+def clean_legendgroups(fig):
+    """removes legend duplicates"""
+    legendgroups = []
+    for t in fig.data:
+        if t.legendgroup not in legendgroups:
+            legendgroups.append(t.legendgroup)
+        else:
+            t.showlegend = False
