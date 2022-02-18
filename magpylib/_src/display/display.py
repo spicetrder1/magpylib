@@ -1,6 +1,7 @@
 """ Display function codes"""
 
 import warnings
+from contextlib import contextmanager
 from magpylib._src.utility import format_obj_input, test_path_format
 from magpylib._src.display.display_matplotlib import display_matplotlib
 from magpylib._src.input_checks import check_dimensions
@@ -130,3 +131,27 @@ def show(
             f" received {backend!r} instead"
         )
         raise MagpylibBadUserInput(msg)
+
+
+@contextmanager
+def display_context(**kwargs):
+    """Context manager to temporarily set display settings in the `with` statement context.
+
+    You need to invoke as ``display_context(pattern1=value1, pattern2=value2)``.
+
+    Examples
+    --------
+    >>> import magpylib as magpy
+    >>> magpy.defaults.reset() # may be necessary in a live kernel context
+    >>> cube = magpy.magnet.Cuboid((0,0,1),(1,1,1))
+    >>> cylinder = magpy.magnet.Cylinder((0,0,1),(1,1))
+    >>> sphere = magpy.magnet.Sphere((0,0,1),diameter=1)
+    >>> with magpy.display_context(backend='plotly'):
+    >>>     cube.show() # -> displays with plotly
+    >>>     cylinder.show() # -> displays with plotly
+    >>> sphere.show() # -> displays with matplotlib
+    """
+    currrent_display_config = Config.display.copy()
+    Config.display.update(kwargs)
+    yield
+    Config.display = currrent_display_config

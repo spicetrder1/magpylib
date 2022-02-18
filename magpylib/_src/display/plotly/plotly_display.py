@@ -980,7 +980,7 @@ def animate_path(
             traces_dicts = frame
         traces = [t for tr in traces_dicts.values() for t in tr]
         frames.append(
-            go.Frame(
+            dict(
                 data=traces,
                 name=str(ind + 1),
                 layout=dict(title=f"""{title} - path index: {ind+1:0{exp}d}"""),
@@ -999,7 +999,7 @@ def animate_path(
 
     # update fig
     fig.frames = frames
-    fig.add_traces(frames[0].data, rows=row, cols=col)
+    fig.add_traces(frames[0]['data'], rows=row, cols=col)
     clean_legendgroups(fig)
     fig.update_layout(
         height=None,
