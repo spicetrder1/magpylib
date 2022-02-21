@@ -2,6 +2,7 @@
 
 from itertools import cycle
 import numpy as np
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from magpylib._src.defaults.defaults_classes import default_settings as Config
@@ -332,7 +333,14 @@ def draw_model3d_extra(obj, style, show_path, ax, color):
 
 
 def display_matplotlib(
-    *obj_list_semi_flat, axis=None, markers=None, zoom=0, color_sequence=None, **kwargs,
+    *obj_list_semi_flat,
+    canvas=None,
+    markers=None,
+    zoom=0,
+    color_sequence=None,
+    row=None,
+    col=None,
+    **kwargs,
 ):
     """
     Display objects and paths graphically with the matplotlib backend.
@@ -351,14 +359,31 @@ def display_matplotlib(
     if color_sequence is None:
         color_sequence = Config.display.colorsequence
     # create or set plotting axis
-    if axis is None:
+    generate_output = False
+    if canvas is None:
         fig = plt.figure(dpi=80, figsize=(8, 8))
         ax = fig.add_subplot(111, projection="3d")
         ax.set_box_aspect((1, 1, 1))
         generate_output = True
+    elif isinstance(canvas, Figure):
+        fig = canvas
+        if row is None:
+            row=1
+        if col is None:
+            col=1
+        geom = lambda ax: ax.get_subplotspec().get_topmost_subplotspec().get_geometry()
+        # get nrows and ncols of fig for firs axis
+        rc = geom(fig.axes[0])[:2]
+        # get the axis index based on row first
+        default_ind = rc[0]*(row-1)+ col-1
+        # get last index of geometry, gives the actual index,
+        # since axis can be added in a different order
+        inds = [geom(ax)[-1] for ax in fig.axes]
+        # retrieve first index that matches
+        ind = inds.index(default_ind)
+        ax = fig.axes[ind]
     else:
-        ax = axis
-        generate_output = False
+        ax = canvas
 
     # draw objects and evaluate system size --------------------------------------
 
