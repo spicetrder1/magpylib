@@ -152,6 +152,8 @@ def display_context(**kwargs):
     >>> sphere.show() # -> displays with matplotlib
     """
     currrent_display_config = Config.display.copy()
-    Config.display.update(kwargs)
-    yield
-    Config.display = currrent_display_config
+    try:
+        Config.display.update(kwargs)
+        yield
+    finally:
+        Config.display = currrent_display_config
