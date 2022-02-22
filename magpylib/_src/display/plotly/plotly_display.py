@@ -771,7 +771,7 @@ def apply_fig_ranges(fig, ranges=None, zoom=None):
         frames = fig.frames if fig.frames else [fig]
         traces = [t for frame in frames for t in frame.data]
         ranges = get_scene_ranges(*traces, zoom=zoom)
-    scene_str = fig.data[0].scene
+    scene_str = fig.data[-1].scene
     scene = getattr(fig.layout, "scene" if scene_str is None else scene_str)
     scene.update(
         **{
