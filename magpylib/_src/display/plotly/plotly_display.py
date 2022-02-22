@@ -767,21 +767,22 @@ def apply_fig_ranges(fig, ranges=None, zoom=None):
     -------
     None: NoneType
     """
-    if ranges is None:
-        frames = fig.frames if fig.frames else [fig]
-        traces = [t for frame in frames for t in frame.data]
-        ranges = get_scene_ranges(*traces, zoom=zoom)
-    scene_str = fig.data[-1].scene
-    scene = getattr(fig.layout, "scene" if scene_str is None else scene_str)
-    scene.update(
-        **{
-            f"{k}axis": dict(range=ranges[i], autorange=False, title=f"{k} [mm]")
-            for i, k in enumerate("xyz")
-        },
-        aspectratio={k: 1 for k in "xyz"},
-        aspectmode="manual",
-        camera_eye={"x": 1, "y": -1.5, "z": 1.4},
-    )
+    if fig.data:
+        if ranges is None:
+            frames = fig.frames if fig.frames else [fig]
+            traces = [t for frame in frames for t in frame.data]
+            ranges = get_scene_ranges(*traces, zoom=zoom)
+        scene_str = fig.data[-1].scene
+        scene = getattr(fig.layout, "scene" if scene_str is None else scene_str)
+        scene.update(
+            **{
+                f"{k}axis": dict(range=ranges[i], autorange=False, title=f"{k} [mm]")
+                for i, k in enumerate("xyz")
+            },
+            aspectratio={k: 1 for k in "xyz"},
+            aspectmode="manual",
+            camera_eye={"x": 1, "y": -1.5, "z": 1.4},
+        )
 
 
 def get_scene_ranges(*traces, zoom=1) -> np.ndarray:
