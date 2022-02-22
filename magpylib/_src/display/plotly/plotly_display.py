@@ -1133,8 +1133,6 @@ def display_plotly(
                 color_sequence=color_sequence,
                 zoom=zoom,
                 title=title,
-                row=row,
-                col=col,
                 **kwargs,
             )
         else:
