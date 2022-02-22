@@ -772,7 +772,7 @@ def apply_fig_ranges(fig, ranges=None, zoom=None):
         traces = [t for frame in frames for t in frame.data]
         ranges = get_scene_ranges(*traces, zoom=zoom)
     scene_str = fig.data[0].scene
-    scene = getattr(fig.layout, scene_str)
+    scene = getattr(fig.layout, 'scene'  if scene_str is None else scene_str)
     scene.update(
         **{
             f"{k}axis": dict(range=ranges[i], autorange=False, title=f"{k} [mm]")
@@ -1000,11 +1000,14 @@ def animate_path(
             sliders_dict["steps"].append(slider_step)
 
     # update fig
-    fig.frames = frames
     fig.add_traces(frames[0]['data'], rows=row, cols=col)
+    for f in frames:
+        for t in f['data']:
+            t['scene'] = fig.data[0].scene
+    fig.frames = frames
     clean_legendgroups(fig)
     fig.update_layout(
-        height=None,
+        #height=None,
         title=title,
         updatemenus=[buttons_dict],
         sliders=[sliders_dict] if animation_slider else None,
@@ -1135,6 +1138,8 @@ def display_plotly(
                 color_sequence=color_sequence,
                 zoom=zoom,
                 title=title,
+                row=row,
+                col=col,
                 **kwargs,
             )
         else:
