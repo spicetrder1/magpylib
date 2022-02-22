@@ -337,7 +337,7 @@ def make_Sensor(
         else ""
     )
     name, name_suffix = get_name_and_suffix("Sensor", default_suffix, style)
-    style_arrows = style.arrows.as_dict(flatten=True, separator='_')
+    style_arrows = style.arrows.as_dict(flatten=True, separator="_")
     sensor = get_sensor_mesh(**style_arrows, center_color=color)
     vertices = np.array([sensor[k] for k in "xyz"]).T
     if color is not None:
@@ -772,7 +772,7 @@ def apply_fig_ranges(fig, ranges=None, zoom=None):
         traces = [t for frame in frames for t in frame.data]
         ranges = get_scene_ranges(*traces, zoom=zoom)
     scene_str = fig.data[0].scene
-    scene = getattr(fig.layout, 'scene'  if scene_str is None else scene_str)
+    scene = getattr(fig.layout, "scene" if scene_str is None else scene_str)
     scene.update(
         **{
             f"{k}axis": dict(range=ranges[i], autorange=False, title=f"{k} [mm]")
@@ -969,13 +969,7 @@ def animate_path(
     autosize = "return"
     for i, ind in enumerate(path_indices):
         kwargs["style_path_frames"] = [ind]
-        frame = draw_frame(
-            objs,
-            color_sequence,
-            zoom,
-            autosize=autosize,
-            **kwargs,
-        )
+        frame = draw_frame(objs, color_sequence, zoom, autosize=autosize, **kwargs,)
         if i == 0:  # get the dipoles and sensors autosize from first frame
             traces_dicts, autosize = frame
         else:
@@ -1000,14 +994,14 @@ def animate_path(
             sliders_dict["steps"].append(slider_step)
 
     # update fig
-    fig.add_traces(frames[0]['data'], rows=row, cols=col)
+    fig.add_traces(frames[0]["data"], rows=row, cols=col)
     for f in frames:
-        for t in f['data']:
-            t['scene'] = fig.data[0].scene
+        for t in f["data"]:
+            t["scene"] = fig.data[0].scene
     fig.frames = frames
     clean_legendgroups(fig)
     fig.update_layout(
-        #height=None,
+        # height=None,
         title=title,
         updatemenus=[buttons_dict],
         sliders=[sliders_dict] if animation_slider else None,
@@ -1087,7 +1081,11 @@ def display_plotly(
         fig = go.Figure()
 
     # Check animation parameters
-    if isinstance(animation, numbers.Number) and not isinstance(animation, bool) and animation > 0:
+    if (
+        isinstance(animation, numbers.Number)
+        and not isinstance(animation, bool)
+        and animation > 0
+    ):
         kwargs["animation_time"] = animation
         animation = True
     elif not isinstance(animation, bool):
@@ -1131,6 +1129,10 @@ def display_plotly(
 
     with fig.batch_update():
         if animation is not False:
+            if row is not None or col is not None:
+                raise NotImplementedError(
+                    "Animation in combination with subplots is not supported at the moment."
+                )
             title = "3D-Paths Animation" if title is None else title
             animate_path(
                 fig=fig,
@@ -1152,6 +1154,7 @@ def display_plotly(
         fig.update_layout(legend_itemsizing="constant")
     if show_fig:
         fig.show(renderer=renderer)
+
 
 def clean_legendgroups(fig):
     """removes legend duplicates"""
