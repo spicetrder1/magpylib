@@ -201,3 +201,28 @@ def test_empty_display():
     ax = plt.subplot(projection="3d")
     x = magpy.show(canvas=ax, backend="matplotlib")
     assert x is None, "empty display matplotlib test fail"
+
+def test_subplots():
+    """test subplots"""
+    # define sources
+    src1 = magpy.magnet.Sphere(magnetization=(0, 0, 1), diameter=1)
+    src2 = magpy.magnet.Cylinder(magnetization=(0, 0, 1), dimension=(1, 2))
+
+    # manipulate first source to create a path
+    src1.move(np.linspace((0, 0, 0.1), (0, 0, 8), 20))
+
+    # manipulate second source
+    src2.move(np.linspace((0.1, 0, 0.1), (5, 0, 5), 50))
+    src2.rotate_from_angax(angle=np.linspace(10, 600, 50), axis="z", anchor=0, start=1)
+
+    # setup plotly figure and subplots
+    fig = plt.figure(figsize=(12, 4))
+    fig.subplots(ncols=3, subplot_kw=dict(projection='3d'))
+
+    # draw the objects
+    x = magpy.show(src1, row=1, canvas=fig)
+    assert x is None, "subplots display matplotlib test fail"
+    x = magpy.show(src2, col=2, canvas=fig)
+    assert x is None, "subplots display matplotlib test fail"
+    x = magpy.show(src1, src2, col=3, canvas=fig)
+    assert x is None, "subplots display matplotlib test fail"

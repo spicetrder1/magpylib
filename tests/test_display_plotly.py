@@ -297,3 +297,38 @@ def test_bad_animation_value():
 
     with pytest.raises(MagpylibBadUserInput):
         src.show(canvas=fig, animation=-1)
+
+def test_subplots_display_context():
+    """test subplots"""
+    # define sources
+    src1 = magpy.magnet.Sphere(magnetization=(0, 0, 1), diameter=1)
+    src2 = magpy.magnet.Cylinder(magnetization=(0, 0, 1), dimension=(1, 2))
+
+    # manipulate first source to create a path
+    src1.move(np.linspace((0, 0, 0.1), (0, 0, 8), 20))
+
+    # manipulate second source
+    src2.move(np.linspace((0.1, 0, 0.1), (5, 0, 5), 50))
+    src2.rotate_from_angax(angle=np.linspace(10, 600, 50), axis="z", anchor=0, start=1)
+
+    # setup plotly figure and subplots
+    fig = go.Figure()
+    fig.set_subplots(rows=1, cols=3, specs=[[{"type": "scene"}] * 3])
+
+    # draw the objects
+    with magpy.display_context(canvas=fig, backend='plotly', zoom=0):
+        x = src1.show(row=1, col=1)
+        assert x is None, "subplots display plotly subplot context test fail"
+        x = magpy.show(src2, row=1, col=2)
+        assert x is None, "subplots display plotly subplot context test fail"
+        x = magpy.show(src1, src2, row=1, col=3, zoom=10)
+        assert x is None, "subplots display plotly subplot context test fail"
+
+def test_animation_subplot():
+    "test animation within subplots"
+    fig = go.Figure()
+    fig.set_subplots(rows=1, cols=3, specs=[[{"type": "scene"}] * 3])
+    src1 = magpy.magnet.Sphere(magnetization=(0, 0, 1), diameter=1)
+    src1.move(np.linspace((0, 0, 0.1), (0, 0, 8), 20))
+    with pytest.raises(NotImplementedError):
+        src1.show(canvas=fig, row=1, col=1, animation=True, backend='plotly')
