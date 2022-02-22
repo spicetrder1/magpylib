@@ -2,6 +2,8 @@
 
 import warnings
 from contextlib import contextmanager
+
+from attr import has
 from magpylib._src.utility import format_obj_input, test_path_format
 from magpylib._src.display.display_matplotlib import display_matplotlib
 from magpylib._src.input_checks import check_dimensions
@@ -10,6 +12,64 @@ from magpylib._src.exceptions import MagpylibBadUserInput
 from magpylib._src.defaults.defaults_utility import SUPPORTED_PLOTTING_BACKENDS
 
 # ON INTERFACE
+def _show(
+    *objects,
+    zoom=0,
+    animation=False,
+    markers=None,
+    backend=None,
+    canvas=None,
+    **kwargs,
+):
+    """
+    Display objects and paths graphically.
+
+    The private function is needed to intercept `show` kwargs from the `display_context` manager.
+
+    See `show` function for extended docstring
+    """
+    # flatten input
+    obj_list_flat = format_obj_input(objects, allow="sources+sensors")
+    obj_list_semi_flat = format_obj_input(objects, allow="sources+sensors+collections")
+
+    # test if all source dimensions and excitations have been initialized
+    check_dimensions(obj_list_flat)
+
+    # test if every individual obj_path is good
+    test_path_format(obj_list_flat)
+
+    if backend is None:
+        backend = Config.display.backend
+
+    if backend == "matplotlib":
+        if animation is not False:
+            msg = "The matplotlib backend does not support animation at the moment. "
+            msg += "Use plotly backend instead."
+            warnings.warn(msg)
+            # animation = False
+        display_matplotlib(
+            *obj_list_semi_flat, markers=markers, zoom=zoom, canvas=canvas, **kwargs,
+        )
+    elif backend == "plotly":
+        # pylint: disable=import-outside-toplevel
+        from magpylib._src.display.plotly.plotly_display import display_plotly
+
+        display_plotly(
+            *obj_list_semi_flat,
+            markers=markers,
+            zoom=zoom,
+            fig=canvas,
+            animation=animation,
+            **kwargs,
+        )
+    else:
+        msg = (
+            f"The plotting backend must be one of {SUPPORTED_PLOTTING_BACKENDS},"
+            f" received {backend!r} instead"
+        )
+        raise MagpylibBadUserInput(msg)
+
+
 def show(
     *objects,
     zoom=0,
@@ -90,47 +150,19 @@ def show(
     >>> magpy.show(src1, src2, style_color='r', zoom=3)
     --> graphic output
     """
-
-    # flatten input
-    obj_list_flat = format_obj_input(objects, allow="sources+sensors")
-    obj_list_semi_flat = format_obj_input(objects, allow="sources+sensors+collections")
-
-    # test if all source dimensions and excitations have been initialized
-    check_dimensions(obj_list_flat)
-
-    # test if every individual obj_path is good
-    test_path_format(obj_list_flat)
-
-    if backend is None:
-        backend = Config.display.backend
-
-    if backend == "matplotlib":
-        if animation is not False:
-            msg = "The matplotlib backend does not support animation at the moment. "
-            msg += "Use plotly backend instead."
-            warnings.warn(msg)
-            # animation = False
-        display_matplotlib(
-            *obj_list_semi_flat, markers=markers, zoom=zoom, canvas=canvas, **kwargs,
-        )
-    elif backend == "plotly":
-        # pylint: disable=import-outside-toplevel
-        from magpylib._src.display.plotly.plotly_display import display_plotly
-
-        display_plotly(
-            *obj_list_semi_flat,
-            markers=markers,
+    kwargs = {
+        **dict(
             zoom=zoom,
-            fig=canvas,
             animation=animation,
-            **kwargs,
-        )
-    else:
-        msg = (
-            f"The plotting backend must be one of {SUPPORTED_PLOTTING_BACKENDS},"
-            f" received {backend!r} instead"
-        )
-        raise MagpylibBadUserInput(msg)
+            markers=markers,
+            backend=backend,
+            canvas=canvas,
+        ),
+        **kwargs,
+    }
+    # pylint: disable=protected-access
+    kwargs.update(**Config.display._kwargs)
+    _show(*objects, **kwargs)
 
 
 @contextmanager
@@ -151,9 +183,12 @@ def display_context(**kwargs):
     >>>     cylinder.show() # -> displays with plotly
     >>> sphere.show() # -> displays with matplotlib
     """
-    currrent_display_config = Config.display.copy()
+    # pylint: disable=protected-access
+    if not hasattr(Config.display, '_kwargs'):
+        Config.display._kwargs = {}
+    conf_disp_orig = {**Config.display._kwargs}
     try:
-        Config.display.update(kwargs)
+        Config.display._kwargs.update(**kwargs)
         yield
     finally:
-        Config.display = currrent_display_config
+        Config.display._kwargs = {**conf_disp_orig}

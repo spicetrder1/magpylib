@@ -337,7 +337,7 @@ class MagicProperties:
         self._freeze()
 
     def __setattr__(self, key, value):
-        if self.__isfrozen and not hasattr(self, key):
+        if self.__isfrozen and not hasattr(self, key) and not key.startswith('_'):
             raise AttributeError(
                 f"{type(self).__name__} has no property '{key}'"
                 f"\n Available properties are: {list(self._property_names_generator())}"
