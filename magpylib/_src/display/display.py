@@ -62,7 +62,7 @@ def _show(
             warnings.warn(msg)
             # animation = False
         display_matplotlib(
-            *obj_list_semi_flat, markers=markers, zoom=zoom, axis=canvas, **kwargs,
+            *obj_list_semi_flat, markers=markers, zoom=zoom, canvas=canvas, **kwargs,
         )
     elif backend == "plotly":
         # pylint: disable=import-outside-toplevel
