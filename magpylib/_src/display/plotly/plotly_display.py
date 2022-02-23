@@ -863,40 +863,10 @@ def animate_path(
     -------
     None: NoneTyp
     """
-    # make sure the number of frames does not exceed the max frames and max frame rate
-    # downsample if necessary
-    path_lengths = []
-    for obj in objs:
-        subobjs = [obj]
-        if getattr(obj, "_object_type", None) == "Collection":
-            subobjs.extend(obj.children)
-        for subobj in subobjs:
-            path_len = getattr(subobj, "_position", np.array((0.0, 0.0, 0.0))).shape[0]
-            path_lengths.append(path_len)
 
-    max_pl = max(path_lengths)
-    if animation_fps > animation_maxfps:
-        warnings.warn(
-            f"The set `animation_fps` at {animation_fps} is greater than the max allowed of"
-            f" {animation_maxfps}. `animation_fps` will be set to {animation_maxfps}. "
-            f"You can modify the default value by setting it in "
-            "`magpylib.defaults.display.animation.maxfps`"
-        )
-        animation_fps = animation_maxfps
-
-    maxpos = min(animation_time * animation_fps, animation_maxframes)
-
-    if max_pl <= maxpos:
-        path_indices = np.arange(max_pl)
-    else:
-        round_step = max_pl / (maxpos - 1)
-        ar = np.linspace(0, max_pl, max_pl, endpoint=False)
-        path_indices = np.unique(np.floor(ar / round_step) * round_step).astype(
-            int
-        )  # downsampled indices
-        path_indices[-1] = (
-            max_pl - 1
-        )  # make sure the last frame is the last path position
+    path_indices, frame_duration, new_fps = extract_path_indices(
+        objs, animation_time, animation_fps, animation_maxfps, animation_maxframes
+    )
 
     # calculate exponent of last frame index to avoid digit shift in
     # frame number display during animation
@@ -905,16 +875,6 @@ def animate_path(
         if path_indices.ndim != 0 and path_indices.max() > 0
         else 1
     )
-
-    frame_duration = int(animation_time * 1000 / path_indices.shape[0])
-    new_fps = int(1000 / frame_duration)
-    if max_pl > animation_maxframes:
-        warnings.warn(
-            f"The number of frames ({max_pl}) is greater than the max allowed "
-            f"of {animation_maxframes}. The `animation_fps` will be set to {new_fps}. "
-            f"You can modify the default value by setting it in "
-            "`magpylib.defaults.display.animation.maxframes`"
-        )
 
     if animation_slider:
         sliders_dict = {
@@ -997,7 +957,7 @@ def animate_path(
     fig.add_traces(frames[0]["data"], rows=row, cols=col)
     for f in frames:
         for t in f["data"]:
-            t["scene"] = fig.data[0].scene
+            t["scene"] = fig.data[-1].scene
     fig.frames = frames
     clean_legendgroups(fig)
     fig.update_layout(
@@ -1007,6 +967,57 @@ def animate_path(
         sliders=[sliders_dict] if animation_slider else None,
     )
     apply_fig_ranges(fig, zoom=zoom)
+
+
+def extract_path_indices(
+    objs, animation_time, animation_fps, animation_maxfps, animation_maxframes
+):
+    """Make sure the number of frames does not exceed the max frames and max frame rate
+    # downsample if necessary"""
+    path_lengths = []
+    for obj in objs:
+        subobjs = [obj]
+        if getattr(obj, "_object_type", None) == "Collection":
+            subobjs.extend(obj.children)
+        for subobj in subobjs:
+            path_len = getattr(subobj, "_position", np.array((0.0, 0.0, 0.0))).shape[0]
+            path_lengths.append(path_len)
+
+    max_pl = max(path_lengths)
+    if animation_fps > animation_maxfps:
+        warnings.warn(
+            f"The set `animation_fps` at {animation_fps} is greater than the max allowed of"
+            f" {animation_maxfps}. `animation_fps` will be set to {animation_maxfps}. "
+            f"You can modify the default value by setting it in "
+            "`magpylib.defaults.display.animation.maxfps`"
+        )
+        animation_fps = animation_maxfps
+
+    maxpos = min(animation_time * animation_fps, animation_maxframes)
+
+    if max_pl <= maxpos:
+        path_indices = np.arange(max_pl)
+    else:
+        round_step = max_pl / (maxpos - 1)
+        ar = np.linspace(0, max_pl, max_pl, endpoint=False)
+        path_indices = np.unique(np.floor(ar / round_step) * round_step).astype(
+            int
+        )  # downsampled indices
+        path_indices[-1] = (
+            max_pl - 1
+        )  # make sure the last frame is the last path position
+
+    frame_duration = int(animation_time * 1000 / path_indices.shape[0])
+    new_fps = int(1000 / frame_duration)
+    if max_pl > animation_maxframes:
+        warnings.warn(
+            f"The number of frames ({max_pl}) is greater than the max allowed "
+            f"of {animation_maxframes}. The `animation_fps` will be set to {new_fps}. "
+            f"You can modify the default value by setting it in "
+            "`magpylib.defaults.display.animation.maxframes`"
+        )
+
+    return path_indices, frame_duration, new_fps
 
 
 def display_plotly(
