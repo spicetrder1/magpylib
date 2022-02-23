@@ -23,7 +23,7 @@ import os
 import setuptools
 from setuptools.command.install import install
 
-_magPyVersion = "4.0.0-beta2"
+_magPyVersion = "4.0.0"
 
 _SphinxVersion = "4.2.0"
 _name = "magpylib"
@@ -64,7 +64,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     zip_safe=False,  ## Gives the environment files so we can access docs,
     ## enables tooltips but may decrease performance
-    install_requires=["numpy>=1.20", "scipy>=1.7", "matplotlib>=3.3",],
+    install_requires=["numpy>=1.20", "scipy>=1.7", "matplotlib>=3.3"],
     # kaleido, jupyterlab are needed for testing with display(renderer='json', backend='plotly')
     extras_require={
         "testing": [
