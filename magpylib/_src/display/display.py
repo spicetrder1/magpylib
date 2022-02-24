@@ -12,7 +12,7 @@ from magpylib._src.input_checks import (
     check_input_zoom,
     check_input_animation,
     check_format_input_vector,
-    )
+)
 
 
 # ON INTERFACE
@@ -51,14 +51,15 @@ def _show(
         markers,
         dims=(2,),
         shape_m1=3,
-        sig_name='markers',
-        sig_type='array_like of shape (n,3)',
-        allow_None=True)
+        sig_name="markers",
+        sig_type="array_like of shape (n,3)",
+        allow_None=True,
+    )
 
     if backend == "matplotlib":
         if animation is not False:
             msg = "The matplotlib backend does not support animation at the moment.\n"
-            msg+= "Use `backend=plotly` instead."
+            msg += "Use `backend=plotly` instead."
             warnings.warn(msg)
             # animation = False
         display_matplotlib(
@@ -171,23 +172,16 @@ def show(
     # # -> zoom=10 should override zoom=1 from context
 
     input_kwargs = dict(
-        zoom=zoom,
-        animation=animation,
-        markers=markers,
-        backend=backend,
-        canvas=canvas,
+        zoom=zoom, animation=animation, markers=markers, backend=backend, canvas=canvas,
     )
     defaults_kwargs = dict(
-        zoom=0,
-        animation=False,
-        markers=None,
-        backend=None,
-        canvas=None,
-        )
-    for k,v in input_kwargs.items():
-        if v!=defaults_kwargs[k]:
+        zoom=0, animation=False, markers=None, backend=None, canvas=None,
+    )
+    for k, v in input_kwargs.items():
+        if v != defaults_kwargs[k]:
             kwargs[k] = v
     _show(*objects, **kwargs)
+
 
 @contextmanager
 def display_context(**kwargs):
