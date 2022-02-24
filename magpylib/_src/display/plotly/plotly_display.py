@@ -1125,7 +1125,7 @@ def display_plotly(
             ):
                 raise NotImplementedError(
                     "Animation in combination with subplots must be called via the `with` "
-                    "statement."
+                    "statement. Check the `magpylib.display_context` docstring for examples."
                 )
             title = "3D-Paths Animation" if title is None else title
             animate_path(
@@ -1150,7 +1150,7 @@ def display_plotly(
         fig.show(renderer=renderer)
 
 
-def process_animation_kwargs(animation, kwargs, flat_obj_list):
+def process_animation_kwargs(animation, kwargs, flat_obj_list=None):
     """extracts animation kwargs"""
     if (
         isinstance(animation, numbers.Number)
@@ -1159,27 +1159,33 @@ def process_animation_kwargs(animation, kwargs, flat_obj_list):
     ):
         kwargs["animation_time"] = animation
         animation = True
-    if (
-        not any(
-            getattr(obj, "position", np.array([])).ndim > 1 for obj in flat_obj_list
-        )
-        and animation is not False
-    ):  # check if some path exist for any object
-        animation = False
-        warnings.warn("No path to be animated detected, displaying standard plot")
+    if flat_obj_list is not None:
+        if (
+            not any(
+                getattr(obj, "position", np.array([])).ndim > 1 for obj in flat_obj_list
+            )
+            and animation is not False
+        ):  # check if some path exist for any object
+            animation = False
+            warnings.warn("No path to be animated detected, displaying standard plot")
 
-    animation_kwargs = {
-        k: v
-        for k, v in kwargs.items()
-        if k.split("_")[0] == "animation" and k != "animation"
-    }
+    no_anim_kwargs = {}
+    animation_kwargs = {}
+    for k, v in kwargs.items():
+        if k.split("_")[0] == "animation":
+            if k != "animation":
+                animation_kwargs[k] = v
+        else:
+            no_anim_kwargs[k] = v
+
     if animation is False:
-        kwargs = {k: v for k, v in kwargs.items() if k not in animation_kwargs}
+        kwargs = no_anim_kwargs
     else:
-        for k, v in Config.display.animation.as_dict().items():
-            anim_key = f"animation_{k}"
-            if kwargs.get(anim_key, None) is None:
-                kwargs[anim_key] = v
+        disp_props = Config.display.animation.copy()
+        disp_props.update({k[len("animation")+1:]:v for k,v in animation_kwargs.items()})
+        animation_kwargs = disp_props.as_dict(flatten=True, separator="_")
+        animation_kwargs = {f"animation_{k}":v for k,v in animation_kwargs.items()}
+        kwargs = {**no_anim_kwargs, **animation_kwargs}
     return animation, kwargs, animation_kwargs
 
 

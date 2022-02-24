@@ -208,6 +208,9 @@ def display_context(**kwargs):
 
     Examples
     --------
+
+    Basic example
+
     >>> import magpylib as magpy
     >>> magpy.defaults.reset() # may be necessary in a live kernel context
     >>> cube = magpy.magnet.Cuboid((0,0,1),(1,1,1))
@@ -217,6 +220,30 @@ def display_context(**kwargs):
     >>>     cube.show() # -> displays with plotly
     >>>     cylinder.show() # -> displays with plotly
     >>> sphere.show() # -> displays with matplotlib
+
+    Display subplots with animation
+
+    >>> import numpy as np
+    >>> import plotly.graph_objects as go
+    >>> import magpylib as magpy
+    >>> # define sources
+    >>> src1 = magpy.magnet.Sphere(magnetization=(0, 0, 1), diameter=1)
+    >>> src2 = magpy.magnet.Cylinder(magnetization=(0, 0, 1), dimension=(1, 2))
+    >>> # manipulate first source to create a path
+    >>> src1.move(np.linspace((0, 0, 0.1), (0, 0, 8), 20))
+    >>> # manipulate second source
+    >>> src2.move(np.linspace((0, 0, 0.1), (5, 0, 5), 50), start=0)
+    >>> src2.rotate_from_angax(angle=np.linspace(0, 600, 50), axis="z", anchor=0, start=0)
+    >>> # setup plotly figure and subplots
+    >>> fig = go.Figure()
+    >>> fig.set_subplots(rows=1, cols=3, specs=[[{"type": "scene"}] * 3])
+    >>> # draw the objects
+    >>> with magpy.display_context(canvas=fig, backend='plotly', animation=2):
+    >>>     src1.show(row=1, col=1)
+    >>>     #magpy.show(src2, row=1, col=2)
+    >>>     #magpy.show(src1, src2, row=1, col=3)
+    >>> # display the system
+    >>> fig.show()
     """
     # pylint: disable=protected-access
     if not hasattr(Config.display, "_kwargs"):
@@ -241,9 +268,8 @@ def display_context(**kwargs):
 
             all_objs = [plot["objects"] for plot in Config.display._subplots]
             all_objs = format_obj_input(all_objs, allow="sources+sensors+collections")
-            flat_obj_list = format_obj_input(all_objs, allow="sources+sensors")
 
-            animation_kwargs = process_animation_kwargs(True, kwargs, flat_obj_list)[-1]
+            animation_kwargs = process_animation_kwargs(kwargs.get('animation', True), kwargs)[-1]
             Config.display._path_params = extract_path_indices(
                 all_objs, **animation_kwargs
             )
@@ -252,7 +278,6 @@ def display_context(**kwargs):
                 for ind, plot in enumerate(subplots):
                     subfig = plot["kwargs"]["canvas"]
                     _show(*plot["objects"], **plot["kwargs"])
-                    display(subfig)
                     fig.add_traces(subfig.data)
                     if ind == 0:
                         fig.update_layout(subfig.layout)
@@ -263,7 +288,6 @@ def display_context(**kwargs):
                             data.extend(list(f2["data"]))
                             f1["data"] = data
                     scene_str = subfig.data[-1].scene
-                    print(scene_str)
                     getattr(fig.layout, scene_str).update(
                         getattr(subfig.layout, scene_str)
                     )
