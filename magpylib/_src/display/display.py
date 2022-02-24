@@ -1,6 +1,7 @@
 """ Display function codes"""
 
 import warnings
+from copy import deepcopy
 from contextlib import contextmanager
 from magpylib._src.defaults.defaults_classes import default_settings as Config
 from magpylib._src.utility import format_obj_input, test_path_format
@@ -12,7 +13,7 @@ from magpylib._src.input_checks import (
     check_input_zoom,
     check_input_animation,
     check_format_input_vector,
-    )
+)
 
 
 # ON INTERFACE
@@ -51,14 +52,15 @@ def _show(
         markers,
         dims=(2,),
         shape_m1=3,
-        sig_name='markers',
-        sig_type='array_like of shape (n,3)',
-        allow_None=True)
+        sig_name="markers",
+        sig_type="array_like of shape (n,3)",
+        allow_None=True,
+    )
 
     if backend == "matplotlib":
         if animation is not False:
             msg = "The matplotlib backend does not support animation at the moment.\n"
-            msg+= "Use `backend=plotly` instead."
+            msg += "Use `backend=plotly` instead."
             warnings.warn(msg)
             # animation = False
         display_matplotlib(
@@ -160,7 +162,8 @@ def show(
     >>> magpy.show(src1, src2, style_color='r')
     --> graphic output
     """
-    kwargs = {**getattr(Config.display, "_kwargs", {}), **kwargs}
+    context_kwargs = getattr(Config.display, "_kwargs", {})
+    kwargs = {**context_kwargs, **kwargs}
     # TODO find a better way to override within `with display_context` only values that are
     # different from the `show` function signature defaults
     # Example:
@@ -171,23 +174,31 @@ def show(
     # # -> zoom=10 should override zoom=1 from context
 
     input_kwargs = dict(
-        zoom=zoom,
-        animation=animation,
-        markers=markers,
-        backend=backend,
-        canvas=canvas,
+        zoom=zoom, animation=animation, markers=markers, backend=backend, canvas=canvas,
     )
     defaults_kwargs = dict(
-        zoom=0,
-        animation=False,
-        markers=None,
-        backend=None,
-        canvas=None,
-        )
-    for k,v in input_kwargs.items():
-        if v!=defaults_kwargs[k]:
+        zoom=0, animation=False, markers=None, backend=None, canvas=None,
+    )
+    for k, v in input_kwargs.items():
+        if v != defaults_kwargs[k]:
             kwargs[k] = v
-    _show(*objects, **kwargs)
+
+    if (
+        getattr(Config.display, "_in_context", False)
+        and (kwargs.get("row", None) is not None or kwargs.get("col", None) is not None)
+        and context_kwargs.get("canvas", None) is not None
+        and context_kwargs.get("animation", False) is not False
+        and context_kwargs.get("backend", "") == "plotly"
+    ):
+        if not hasattr(Config.display, "_subplots"):
+            Config.display._subplots = []
+        canvas = context_kwargs["canvas"]
+        Config.display._canvas = canvas
+        kwargs["canvas"] = deepcopy(canvas)
+        Config.display._subplots.append(dict(objects=objects, kwargs=kwargs))
+    else:
+        _show(*objects, **kwargs)
+
 
 @contextmanager
 def display_context(**kwargs):
@@ -210,9 +221,57 @@ def display_context(**kwargs):
     # pylint: disable=protected-access
     if not hasattr(Config.display, "_kwargs"):
         Config.display._kwargs = {}
+    if not hasattr(Config.display, "_in_context"):
+        Config.display._in_context = False
+
     conf_disp_orig = {**Config.display._kwargs}
+    conf_in_context_orig = Config.display._in_context
+
     try:
         Config.display._kwargs.update(**kwargs)
+        Config.display._in_context = True
         yield _show
+        subplots = getattr(Config.display, "_subplots", [])
+        if subplots:
+            from magpylib._src.display.plotly.plotly_display import (
+                extract_path_indices,
+                clean_legendgroups,
+                process_animation_kwargs,
+            )
+
+            all_objs = [plot["objects"] for plot in Config.display._subplots]
+            all_objs = format_obj_input(all_objs, allow="sources+sensors+collections")
+            flat_obj_list = format_obj_input(all_objs, allow="sources+sensors")
+
+            animation_kwargs = process_animation_kwargs(True, kwargs, flat_obj_list)[-1]
+            Config.display._path_params = extract_path_indices(
+                all_objs, **animation_kwargs
+            )
+            fig = Config.display._canvas
+            with fig.batch_update():
+                for ind, plot in enumerate(subplots):
+                    subfig = plot["kwargs"]["canvas"]
+                    _show(*plot["objects"], **plot["kwargs"])
+                    display(subfig)
+                    fig.add_traces(subfig.data)
+                    if ind == 0:
+                        fig.update_layout(subfig.layout)
+                        frames = subfig.frames
+                    else:
+                        for f1, f2 in zip(frames, subfig.frames):
+                            data = list(f1["data"])
+                            data.extend(list(f2["data"]))
+                            f1["data"] = data
+                    scene_str = subfig.data[-1].scene
+                    print(scene_str)
+                    getattr(fig.layout, scene_str).update(
+                        getattr(subfig.layout, scene_str)
+                    )
+                fig.frames = frames
+                clean_legendgroups(fig)
     finally:
         Config.display._kwargs = {**conf_disp_orig}
+        Config.display._in_context = conf_in_context_orig
+        Config.display._path_params = None
+        Config.display._subplots = []
+        Config.display._canvas = None

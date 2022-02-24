@@ -864,9 +864,16 @@ def animate_path(
     None: NoneTyp
     """
 
-    path_indices, frame_duration, new_fps = extract_path_indices(
-        objs, animation_time, animation_fps, animation_maxfps, animation_maxframes
-    )
+    if getattr(Config.display, "_path_params", None) is None:
+        path_indices, frame_duration, new_fps = extract_path_indices(
+            objs,
+            animation_time=animation_time,
+            animation_fps=animation_fps,
+            animation_maxfps=animation_maxfps,
+            animation_maxframes=animation_maxframes,
+        )
+    else:
+        path_indices, frame_duration, new_fps = Config.display._path_params
 
     # calculate exponent of last frame index to avoid digit shift in
     # frame number display during animation
@@ -970,7 +977,12 @@ def animate_path(
 
 
 def extract_path_indices(
-    objs, animation_time, animation_fps, animation_maxfps, animation_maxframes
+    objs,
+    animation_time=3,
+    animation_fps=30,
+    animation_maxfps=50,
+    animation_maxframes=200,
+    animation_slider=False,
 ):
     """Make sure the number of frames does not exceed the max frames and max frame rate
     # downsample if necessary"""
@@ -1092,32 +1104,7 @@ def display_plotly(
         fig = go.Figure()
 
     # Check animation parameters
-    if (
-        isinstance(animation, numbers.Number)
-        and not isinstance(animation, bool)
-        and animation > 0
-    ):
-        kwargs["animation_time"] = animation
-        animation = True
-    if (
-        not any(
-            getattr(obj, "position", np.array([])).ndim > 1 for obj in flat_obj_list
-        )
-        and animation is not False
-    ):  # check if some path exist for any object
-        animation = False
-        warnings.warn("No path to be animated detected, displaying standard plot")
-
-    animation_kwargs = {
-        k: v for k, v in kwargs.items() if k.split("_")[0] == "animation"
-    }
-    if animation is False:
-        kwargs = {k: v for k, v in kwargs.items() if k not in animation_kwargs}
-    else:
-        for k, v in Config.display.animation.as_dict().items():
-            anim_key = f"animation_{k}"
-            if kwargs.get(anim_key, None) is None:
-                kwargs[anim_key] = v
+    animation, kwargs, _ = process_animation_kwargs(animation, kwargs, flat_obj_list)
 
     if obj_list:
         style = getattr(obj_list[0], "style", None)
@@ -1131,12 +1118,14 @@ def display_plotly(
 
     if color_sequence is None:
         color_sequence = Config.display.colorsequence
-
     with fig.batch_update():
         if animation is not False:
-            if row is not None or col is not None:
+            if (row is not None or col is not None) and not getattr(
+                Config.display, "_subplots", []
+            ):
                 raise NotImplementedError(
-                    "Animation in combination with subplots is not supported at the moment."
+                    "Animation in combination with subplots must be called via the `with` "
+                    "statement."
                 )
             title = "3D-Paths Animation" if title is None else title
             animate_path(
@@ -1161,11 +1150,49 @@ def display_plotly(
         fig.show(renderer=renderer)
 
 
+def process_animation_kwargs(animation, kwargs, flat_obj_list):
+    """extracts animation kwargs"""
+    if (
+        isinstance(animation, numbers.Number)
+        and not isinstance(animation, bool)
+        and animation > 0
+    ):
+        kwargs["animation_time"] = animation
+        animation = True
+    if (
+        not any(
+            getattr(obj, "position", np.array([])).ndim > 1 for obj in flat_obj_list
+        )
+        and animation is not False
+    ):  # check if some path exist for any object
+        animation = False
+        warnings.warn("No path to be animated detected, displaying standard plot")
+
+    animation_kwargs = {
+        k: v
+        for k, v in kwargs.items()
+        if k.split("_")[0] == "animation" and k != "animation"
+    }
+    if animation is False:
+        kwargs = {k: v for k, v in kwargs.items() if k not in animation_kwargs}
+    else:
+        for k, v in Config.display.animation.as_dict().items():
+            anim_key = f"animation_{k}"
+            if kwargs.get(anim_key, None) is None:
+                kwargs[anim_key] = v
+    return animation, kwargs, animation_kwargs
+
+
 def clean_legendgroups(fig):
     """removes legend duplicates"""
-    legendgroups = []
-    for t in fig.data:
-        if t.legendgroup not in legendgroups:
-            legendgroups.append(t.legendgroup)
-        else:
-            t.showlegend = False
+    frames = [fig.data]
+    if fig.frames:
+        data_list = [f["data"] for f in fig.frames]
+        frames.extend(data_list)
+    for f in frames:
+        legendgroups = []
+        for t in f:
+            if t.legendgroup not in legendgroups:
+                legendgroups.append(t.legendgroup)
+            else:
+                t.showlegend = False
