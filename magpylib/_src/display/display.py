@@ -162,8 +162,9 @@ def show(
     >>> magpy.show(src1, src2, style_color='r')
     --> graphic output
     """
-    context_kwargs = getattr(Config.display, "_kwargs", {})
-    kwargs = {**context_kwargs, **kwargs}
+
+    ctx = Config.display.context
+    kwargs = {**ctx.kwargs, **kwargs}
     # TODO find a better way to override within `with display_context` only values that are
     # different from the `show` function signature defaults
     # Example:
@@ -182,20 +183,17 @@ def show(
     for k, v in input_kwargs.items():
         if v != defaults_kwargs[k]:
             kwargs[k] = v
-
     if (
-        getattr(Config.display, "_in_context", False)
+        ctx.isrunning
         and (kwargs.get("row", None) is not None or kwargs.get("col", None) is not None)
-        and context_kwargs.get("canvas", None) is not None
-        and context_kwargs.get("animation", False) is not False
-        and context_kwargs.get("backend", "") == "plotly"
+        and ctx.kwargs.get("canvas", None) is not None
+        and ctx.kwargs.get("animation", False) is not False
+        and ctx.kwargs.get("backend", "") == "plotly"
     ):
-        if not hasattr(Config.display, "_subplots"):
-            Config.display._subplots = []
-        canvas = context_kwargs["canvas"]
-        Config.display._canvas = canvas
+        canvas = ctx.kwargs["canvas"]
+        ctx.canvas = canvas
         kwargs["canvas"] = deepcopy(canvas)
-        Config.display._subplots.append(dict(objects=objects, kwargs=kwargs))
+        ctx.subplots.append(dict(objects=objects, kwargs=kwargs))
     else:
         _show(*objects, **kwargs)
 
@@ -246,56 +244,16 @@ def display_context(**kwargs):
     >>> fig.show()
     """
     # pylint: disable=protected-access
-    if not hasattr(Config.display, "_kwargs"):
-        Config.display._kwargs = {}
-    if not hasattr(Config.display, "_in_context"):
-        Config.display._in_context = False
 
-    conf_disp_orig = {**Config.display._kwargs}
-    conf_in_context_orig = Config.display._in_context
+    ctx = Config.display.context
 
     try:
-        Config.display._kwargs.update(**kwargs)
-        Config.display._in_context = True
+        ctx.isrunning = True
+        ctx.kwargs.update(**kwargs)
         yield _show
-        subplots = getattr(Config.display, "_subplots", [])
-        if subplots:
-            from magpylib._src.display.plotly.plotly_display import (
-                extract_path_indices,
-                clean_legendgroups,
-                process_animation_kwargs,
-            )
-
-            all_objs = [plot["objects"] for plot in Config.display._subplots]
-            all_objs = format_obj_input(all_objs, allow="sources+sensors+collections")
-
-            animation_kwargs = process_animation_kwargs(kwargs.get('animation', True), kwargs)[-1]
-            Config.display._path_params = extract_path_indices(
-                all_objs, **animation_kwargs
-            )
-            fig = Config.display._canvas
-            with fig.batch_update():
-                for ind, plot in enumerate(subplots):
-                    subfig = plot["kwargs"]["canvas"]
-                    _show(*plot["objects"], **plot["kwargs"])
-                    fig.add_traces(subfig.data)
-                    if ind == 0:
-                        fig.update_layout(subfig.layout)
-                        frames = subfig.frames
-                    else:
-                        for f1, f2 in zip(frames, subfig.frames):
-                            data = list(f1["data"])
-                            data.extend(list(f2["data"]))
-                            f1["data"] = data
-                    scene_str = subfig.data[-1].scene
-                    getattr(fig.layout, scene_str).update(
-                        getattr(subfig.layout, scene_str)
-                    )
-                fig.frames = frames
-                clean_legendgroups(fig)
+        if ctx.subplots:
+            # pylint: disable=import-outside-toplevel
+            from magpylib._src.display.plotly.plotly_display import batch_animate_subplots
+            batch_animate_subplots(ctx, show_fn=_show, **kwargs)
     finally:
-        Config.display._kwargs = {**conf_disp_orig}
-        Config.display._in_context = conf_in_context_orig
-        Config.display._path_params = None
-        Config.display._subplots = []
-        Config.display._canvas = None
+        ctx.reset()

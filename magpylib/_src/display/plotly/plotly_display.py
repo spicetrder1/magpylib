@@ -821,6 +821,7 @@ def animate_path(
     animation_maxfps=50,
     animation_maxframes=200,
     animation_slider=False,
+    animation_path=None,
     row=None,
     col=None,
     **kwargs,
@@ -863,9 +864,8 @@ def animate_path(
     -------
     None: NoneTyp
     """
-
-    if getattr(Config.display, "_path_params", None) is None:
-        path_indices, frame_duration, new_fps = extract_path_indices(
+    if animation_path is None:
+        path_indices, frame_duration, new_fps = get_animation_path_params(
             objs,
             animation_time=animation_time,
             animation_fps=animation_fps,
@@ -873,7 +873,7 @@ def animate_path(
             animation_maxframes=animation_maxframes,
         )
     else:
-        path_indices, frame_duration, new_fps = Config.display._path_params
+        path_indices, frame_duration, new_fps = animation_path
 
     # calculate exponent of last frame index to avoid digit shift in
     # frame number display during animation
@@ -976,7 +976,7 @@ def animate_path(
     apply_fig_ranges(fig, zoom=zoom)
 
 
-def extract_path_indices(
+def get_animation_path_params(
     objs,
     animation_time=3,
     animation_fps=30,
@@ -1042,6 +1042,7 @@ def display_plotly(
     color_sequence=None,
     row=None,
     col=None,
+    animation_path=None,
     **kwargs,
 ):
 
@@ -1120,9 +1121,8 @@ def display_plotly(
         color_sequence = Config.display.colorsequence
     with fig.batch_update():
         if animation is not False:
-            if (row is not None or col is not None) and not getattr(
-                Config.display, "_subplots", []
-            ):
+            animated_subplots = Config.display.context.subplots
+            if (row is not None or col is not None) and not animated_subplots:
                 raise NotImplementedError(
                     "Animation in combination with subplots must be called via the `with` "
                     "statement. Check the `magpylib.display_context` docstring for examples."
@@ -1136,6 +1136,7 @@ def display_plotly(
                 title=title,
                 row=row,
                 col=col,
+                animation_path=animation_path,
                 **kwargs,
             )
         else:
@@ -1182,9 +1183,11 @@ def process_animation_kwargs(animation, kwargs, flat_obj_list=None):
         kwargs = no_anim_kwargs
     else:
         disp_props = Config.display.animation.copy()
-        disp_props.update({k[len("animation")+1:]:v for k,v in animation_kwargs.items()})
+        disp_props.update(
+            {k[len("animation") + 1 :]: v for k, v in animation_kwargs.items()}
+        )
         animation_kwargs = disp_props.as_dict(flatten=True, separator="_")
-        animation_kwargs = {f"animation_{k}":v for k,v in animation_kwargs.items()}
+        animation_kwargs = {f"animation_{k}": v for k, v in animation_kwargs.items()}
         kwargs = {**no_anim_kwargs, **animation_kwargs}
     return animation, kwargs, animation_kwargs
 
@@ -1202,3 +1205,31 @@ def clean_legendgroups(fig):
                 legendgroups.append(t.legendgroup)
             else:
                 t.showlegend = False
+
+
+def batch_animate_subplots(ctx, show_fn, **kwargs):
+    """draw objects into canvas in a batch"""
+    all_objs = [plot["objects"] for plot in ctx.subplots]
+    all_objs = format_obj_input(all_objs, allow="sources+sensors+collections")
+
+    anim_kwargs = process_animation_kwargs(kwargs.get("animation", True), kwargs)[-1]
+    anim_path = get_animation_path_params(all_objs, **anim_kwargs)
+    fig = ctx.canvas
+
+    with fig.batch_update():
+        for ind, plot in enumerate(ctx.subplots):
+            subfig = plot["kwargs"]["canvas"]
+            show_fn(*plot["objects"], **plot["kwargs"], animation_path=anim_path)
+            fig.add_traces(subfig.data)
+            if ind == 0:
+                fig.update_layout(subfig.layout)
+                frames = subfig.frames
+            else:
+                for f1, f2 in zip(frames, subfig.frames):
+                    data = list(f1["data"])
+                    data.extend(list(f2["data"]))
+                    f1["data"] = data
+            scene_str = subfig.data[-1].scene
+            getattr(fig.layout, scene_str).update(getattr(subfig.layout, scene_str))
+        fig.frames = frames
+        clean_legendgroups(fig)

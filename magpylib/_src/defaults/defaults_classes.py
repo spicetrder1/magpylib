@@ -43,6 +43,18 @@ class DefaultConfig(MagicProperties):
     def display(self, val):
         self._display = validate_property_class(val, "display", Display, self)
 
+class DisplayContext:
+    """Holds display context properties when `show` is used in the `with` statement."""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        """reset context manager properties"""
+        self.kwargs = {}
+        self.isrunning = False
+        self.subplots = []
+        self.canvas = None
 
 class Display(MagicProperties):
     """
@@ -78,6 +90,10 @@ class Display(MagicProperties):
     styles: dict or DisplayStyle
         Base class containing display styling properties for all object families.
     """
+
+    # TODO make context a property without breaking MagicProperties
+
+    context = DisplayContext()
 
     @property
     def backend(self):
