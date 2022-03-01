@@ -137,7 +137,12 @@ def make_Loop(
 
 
 def make_DefaultTrace(
-    obj, position=(0.0, 0.0, 0.0), orientation=None, color=None, style=None, **kwargs,
+    obj,
+    position=(0.0, 0.0, 0.0),
+    orientation=None,
+    color=None,
+    style=None,
+    **kwargs,
 ) -> dict:
     """
     Creates the plotly scatter3d parameters for an object with no specifically supported
@@ -200,7 +205,14 @@ def make_Dipole(
     orientation = orientation * mag_orient
     mag = np.array((0, 0, 1))
     return _update_mag_mesh(
-        dipole, name, name_suffix, mag, orientation, position, style, **kwargs,
+        dipole,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -221,7 +233,14 @@ def make_Cuboid(
     name, name_suffix = get_name_and_suffix("Cuboid", default_suffix, style)
     cuboid = make_BaseCuboid(dimension=dimension)
     return _update_mag_mesh(
-        cuboid, name, name_suffix, mag, orientation, position, style, **kwargs,
+        cuboid,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -243,10 +262,19 @@ def make_Cylinder(
     default_suffix = f" (D={d[0]}m, H={d[1]}m)"
     name, name_suffix = get_name_and_suffix("Cylinder", default_suffix, style)
     cylinder = make_BasePrism(
-        base_vertices=base_vertices, diameter=diameter, height=height,
+        base_vertices=base_vertices,
+        diameter=diameter,
+        height=height,
     )
     return _update_mag_mesh(
-        cylinder, name, name_suffix, mag, orientation, position, style, **kwargs,
+        cylinder,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -297,7 +325,14 @@ def make_Sphere(
     vert = min(max(vert, 3), 20)
     sphere = make_BaseEllipsoid(vert=vert, dimension=[diameter] * 3)
     return _update_mag_mesh(
-        sphere, name, name_suffix, mag, orientation, position, style, **kwargs,
+        sphere,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -412,10 +447,15 @@ def _update_mag_mesh(
                 color_south=color.south,
             )
             mesh_dict["intensity"] = getIntensity(
-                vertices=vertices, axis=magnetization,
+                vertices=vertices,
+                axis=magnetization,
             )
     mesh_dict = place_and_orient_model3d(
-        mesh_dict, orientation, position, showscale=False, name=f"{name}{name_suffix}",
+        mesh_dict,
+        orientation,
+        position,
+        showscale=False,
+        name=f"{name}{name_suffix}",
     )
     return {**mesh_dict, **kwargs}
 
@@ -515,7 +555,8 @@ def get_plotly_traces(
             make_func = make_Sensor
         elif isinstance(input_obj, Cuboid):
             kwargs.update(
-                mag=input_obj.magnetization, dimension=input_obj.dimension,
+                mag=input_obj.magnetization,
+                dimension=input_obj.dimension,
             )
             make_func = make_Cuboid
         elif isinstance(input_obj, Cylinder):
@@ -530,27 +571,33 @@ def get_plotly_traces(
         elif isinstance(input_obj, CylinderSegment):
             vert = 50
             kwargs.update(
-                mag=input_obj.magnetization, dimension=input_obj.dimension, vert=vert,
+                mag=input_obj.magnetization,
+                dimension=input_obj.dimension,
+                vert=vert,
             )
             make_func = make_CylinderSegment
         elif isinstance(input_obj, Sphere):
             kwargs.update(
-                mag=input_obj.magnetization, diameter=input_obj.diameter,
+                mag=input_obj.magnetization,
+                diameter=input_obj.diameter,
             )
             make_func = make_Sphere
         elif isinstance(input_obj, Dipole):
             kwargs.update(
-                moment=input_obj.moment, autosize=autosize,
+                moment=input_obj.moment,
+                autosize=autosize,
             )
             make_func = make_Dipole
         elif isinstance(input_obj, Line):
             kwargs.update(
-                vertices=input_obj.vertices, current=input_obj.current,
+                vertices=input_obj.vertices,
+                current=input_obj.current,
             )
             make_func = make_Line
         elif isinstance(input_obj, Loop):
             kwargs.update(
-                diameter=input_obj.diameter, current=input_obj.current,
+                diameter=input_obj.diameter,
+                current=input_obj.current,
             )
             make_func = make_Loop
         elif getattr(input_obj, "children", None) is not None:
@@ -885,7 +932,7 @@ def animate_path(
 
     if animation_slider:
         sliders_dict = {
-            "active": 0,
+            "active": len(path_indices)-1,
             "yanchor": "top",
             "font": {"size": 10},
             "xanchor": "left",
@@ -936,7 +983,13 @@ def animate_path(
     autosize = "return"
     for i, ind in enumerate(path_indices):
         kwargs["style_path_frames"] = [ind]
-        frame = draw_frame(objs, color_sequence, zoom, autosize=autosize, **kwargs,)
+        frame = draw_frame(
+            objs,
+            color_sequence,
+            zoom,
+            autosize=autosize,
+            **kwargs,
+        )
         if i == 0:  # get the dipoles and sensors autosize from first frame
             traces_dicts, autosize = frame
         else:
@@ -953,7 +1006,10 @@ def animate_path(
             slider_step = {
                 "args": [
                     [str(ind + 1)],
-                    {"frame": {"duration": 0, "redraw": True}, "mode": "immediate",},
+                    {
+                        "frame": {"duration": 0, "redraw": True},
+                        "mode": "immediate",
+                    },
                 ],
                 "label": str(ind + 1),
                 "method": "animate",
@@ -1273,13 +1329,15 @@ def draw_sensor_values(
         for i in coords_indices:
             k = "xyz"[i]
             kwargs = dict(
-                name=f"{field}{k}_{sens}", legendgroup=f"{sens}", showlegend=False
+                name=f"{field}{k}_{sens}",
+                legendgroup=f"{sens}",
+                showlegend=False,
+                row=row,
+                col=col,
             )
             fig.add_scatter(
                 x=frames_indices,
                 y=B.T[i],
-                row=row,
-                col=col,
                 mode="lines",
                 line_dash=xyz_linestyles[i],
                 line_color=color,
@@ -1295,18 +1353,18 @@ def draw_sensor_values(
             )
         t = fig.data[-1]
         xaxis, yaxis = t.xaxis, t.yaxis
-    m, M = min(frames_indices), max(frames_indices)
-    getattr(fig.layout, xaxis if xaxis is not None else "xaxis").range = [
-        m - (M - m) * 0.05,
-        M + (M - m) * 0.05,
-    ]
-    m, M = np.min(B_array), np.max(B_array)
-    getattr(fig.layout, yaxis if yaxis is not None else "yaxis").range = [
-        m - (M - m) * 0.05,
-        M + (M - m) * 0.05,
-    ]
+        m, M = min(frames_indices), max(frames_indices)
+        getattr(fig.layout, 'xaxis' if xaxis in (None, 'x') else 'xaxis'+xaxis[1]).range = [
+            m - (M - m) * 0.05,
+            M + (M - m) * 0.05,
+        ]
+        m, M = np.min(B_array), np.max(B_array)
+        getattr(fig.layout, 'yaxis' if yaxis in (None, 'y') else 'yaxis'+yaxis[1]).range = [
+            m - (M - m) * 0.05,
+            M + (M - m) * 0.05,
+        ]
     frames = []
-    for ind, _ in enumerate(frames_indices):
+    for ind, find in enumerate(frames_indices):
         data = []
         for sens, B in zip(sensors, B_array):
             color = Config.display.context.colors.get(sens, None)
@@ -1330,7 +1388,7 @@ def draw_sensor_values(
                             **kwargs,
                         ),
                         go.Scatter(
-                            x=[ind],
+                            x=[find],
                             y=[B.T[i][ind]],
                             mode="markers",
                             marker_size=10,
