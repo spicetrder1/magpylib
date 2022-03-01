@@ -1310,21 +1310,21 @@ def draw_sensor_values(
     # pylint: disable=import-outside-toplevel
     from magpylib._src.fields.field_wrap_BH_level3 import getBH_level2
 
-    frames_indices = animation_path[0]
+    frames_indices = np.array(animation_path[0])
     coords_indices = {0, 1, 2}
     if len(field) > 1:
         coords_indices = set("xyz".index(k) for k in field[1:])
         field = field[0]
     xyz_linestyles = ("solid", "dash", "dot")
 
-    B_array = getBH_level2(sources, sensors, sumup=True, squeeze=False, field=field)
-    B_array = B_array[0]  # select first source
-    B_array = B_array.swapaxes(
+    BH_array = getBH_level2(sources, sensors, sumup=True, squeeze=False, field=field)
+    BH_array = BH_array[0]  # select first source
+    BH_array = BH_array.swapaxes(
         0, 1
     )  # make first index to be Sensors index, second is path index
-    B_array = B_array.mean(axis=-2)  # average on pixel
+    BH_array = BH_array.mean(axis=-2)  # average on pixel
 
-    for sens, B in zip(sensors, B_array):
+    for sens, BH in zip(sensors, BH_array):
         color = Config.display.context.colors.get(sens, None)
         for i in coords_indices:
             k = "xyz"[i]
@@ -1337,7 +1337,7 @@ def draw_sensor_values(
             )
             fig.add_scatter(
                 x=frames_indices,
-                y=B.T[i],
+                y=BH.T[i][frames_indices],
                 mode="lines",
                 line_dash=xyz_linestyles[i],
                 line_color=color,
@@ -1345,7 +1345,7 @@ def draw_sensor_values(
             )
             fig.add_scatter(
                 x=[frames_indices[-1]],
-                y=[B.T[i][frames_indices[-1]]],
+                y=[BH.T[i][frames_indices[-1]]],
                 mode="markers",
                 marker_size=10,
                 marker_color=color,
@@ -1358,7 +1358,7 @@ def draw_sensor_values(
             m - (M - m) * 0.05,
             M + (M - m) * 0.05,
         ]
-        m, M = np.min(B_array), np.max(B_array)
+        m, M = np.min(BH_array), np.max(BH_array)
         getattr(fig.layout, 'yaxis' if yaxis in (None, 'y') else 'yaxis'+yaxis[1]).range = [
             m - (M - m) * 0.05,
             M + (M - m) * 0.05,
@@ -1366,7 +1366,7 @@ def draw_sensor_values(
     frames = []
     for ind, find in enumerate(frames_indices):
         data = []
-        for sens, B in zip(sensors, B_array):
+        for sens, BH in zip(sensors, BH_array):
             color = Config.display.context.colors.get(sens, None)
             for i in coords_indices:
                 k = "xyz"[i]
@@ -1381,7 +1381,7 @@ def draw_sensor_values(
                     [
                         go.Scatter(
                             x=frames_indices,
-                            y=B.T[i],
+                            y=BH.T[i][frames_indices],
                             mode="lines",
                             line_dash=xyz_linestyles[i],
                             line_color=color,
@@ -1389,7 +1389,7 @@ def draw_sensor_values(
                         ),
                         go.Scatter(
                             x=[find],
-                            y=[B.T[i][ind]],
+                            y=[BH.T[i][ind]],
                             mode="markers",
                             marker_size=10,
                             marker_color=color,
