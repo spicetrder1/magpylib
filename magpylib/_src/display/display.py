@@ -80,15 +80,7 @@ def _show(
         )
 
 
-def show(
-    *objects,
-    zoom=0,
-    animation=False,
-    markers=None,
-    backend=None,
-    canvas=None,
-    **kwargs,
-):
+def show(*objects, **kwargs):
     """Display objects and paths graphically.
 
     Global graphic styles can be set with kwargs as style-dictionary or using
@@ -165,8 +157,7 @@ def show(
 
     ctx = Config.display.context
     kwargs = {**ctx.kwargs, **kwargs}
-    # TODO find a better way to override within `with display_context` only values that are
-    # different from the `show` function signature defaults
+    # allows kwargs to override within `with display_context`
     # Example:
     # with magpy.display_context(canvas=fig, zoom=1):
     #   src1.show(row=1, col=1)
@@ -174,15 +165,6 @@ def show(
     #   magpy.show(src1, src2, row=1, col=3, zoom=10)
     # # -> zoom=10 should override zoom=1 from context
 
-    input_kwargs = dict(
-        zoom=zoom, animation=animation, markers=markers, backend=backend, canvas=canvas,
-    )
-    defaults_kwargs = dict(
-        zoom=0, animation=False, markers=None, backend=None, canvas=None,
-    )
-    for k, v in input_kwargs.items():
-        if v != defaults_kwargs[k]:
-            kwargs[k] = v
     if (
         ctx.isrunning
         and (kwargs.get("row", None) is not None or kwargs.get("col", None) is not None)

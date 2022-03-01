@@ -1214,8 +1214,8 @@ def batch_animate_subplots(ctx, show_fn, **kwargs):
 
     anim_kwargs = process_animation_kwargs(kwargs.get("animation", True), kwargs)[-1]
     anim_path = get_animation_path_params(all_objs, **anim_kwargs)
-    fig = ctx.canvas
 
+    fig = ctx.canvas
     with fig.batch_update():
         for ind, plot in enumerate(ctx.subplots):
             subfig = plot["kwargs"]["canvas"]
