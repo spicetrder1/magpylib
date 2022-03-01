@@ -55,6 +55,7 @@ class DisplayContext:
         self.isrunning = False
         self.subplots = []
         self.canvas = None
+        self.colors = {}
 
 class Display(MagicProperties):
     """

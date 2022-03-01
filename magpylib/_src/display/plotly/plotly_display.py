@@ -476,7 +476,7 @@ def get_plotly_traces(
     kwargs["color"] = style_color if style_color is not None else color
     kwargs["opacity"] = style.opacity
     legendgroup = f"{input_obj}" if legendgroup is None else legendgroup
-
+    Config.display.context.colors[input_obj] = kwargs["color"]
     if hasattr(style, "magnetization"):
         if style.magnetization.show:
             check_excitations([input_obj])
@@ -1127,6 +1127,15 @@ def display_plotly(
                     "Animation in combination with subplots must be called via the `with` "
                     "statement. Check the `magpylib.display_context` docstring for examples."
                 )
+            if kwargs.get("field", "").startswith(("H", "B")):
+                return draw_sensor_values(
+                    flat_obj_list,
+                    fig=fig,
+                    row=row,
+                    col=col,
+                    animation_path=animation_path,
+                    **kwargs,
+                )
             title = "3D-Paths Animation" if title is None else title
             animate_path(
                 fig=fig,
@@ -1222,14 +1231,113 @@ def batch_animate_subplots(ctx, show_fn, **kwargs):
             show_fn(*plot["objects"], **plot["kwargs"], animation_path=anim_path)
             fig.add_traces(subfig.data)
             if ind == 0:
-                fig.update_layout(subfig.layout)
                 frames = subfig.frames
             else:
                 for f1, f2 in zip(frames, subfig.frames):
                     data = list(f1["data"])
                     data.extend(list(f2["data"]))
                     f1["data"] = data
-            scene_str = subfig.data[-1].scene
-            getattr(fig.layout, scene_str).update(getattr(subfig.layout, scene_str))
+            fig.update_layout(subfig.layout)
+            if hasattr(subfig.data[-1], "scene"):
+                scene_str = subfig.data[-1].scene
+                getattr(fig.layout, scene_str).update(getattr(subfig.layout, scene_str))
         fig.frames = frames
         clean_legendgroups(fig)
+
+
+def draw_sensor_values(
+    flat_obj_list, fig, row, col, animation_path, field="B", **kwargs
+):
+    """ssadf"""
+    sources = format_obj_input(flat_obj_list, allow="sources")
+    sensors = format_obj_input(flat_obj_list, allow="sensors")
+    # pylint: disable=import-outside-toplevel
+    from magpylib._src.fields.field_wrap_BH_level3 import getBH_level2
+
+    frames_indices = animation_path[0]
+    coords_indices = {0, 1, 2}
+    if len(field) > 1:
+        coords_indices = set("xyz".index(k) for k in field[1:])
+        field = field[0]
+    xyz_linestyles = ("solid", "dash", "dot")
+
+    B_array = getBH_level2(sources, sensors, sumup=True, squeeze=False, field=field)
+    B_array = B_array[0]  # select first source
+    B_array = B_array.swapaxes(
+        0, 1
+    )  # make first index to be Sensors index, second is path index
+    B_array = B_array.mean(axis=-2)  # average on pixel
+
+    for sens, B in zip(sensors, B_array):
+        color = Config.display.context.colors.get(sens, None)
+        for i in coords_indices:
+            k = "xyz"[i]
+            kwargs = dict(
+                name=f"{field}{k}_{sens}", legendgroup=f"{sens}", showlegend=False
+            )
+            fig.add_scatter(
+                x=frames_indices,
+                y=B.T[i],
+                row=row,
+                col=col,
+                mode="lines",
+                line_dash=xyz_linestyles[i],
+                line_color=color,
+                **kwargs,
+            )
+            fig.add_scatter(
+                x=[frames_indices[-1]],
+                y=[B.T[i][frames_indices[-1]]],
+                mode="markers",
+                marker_size=10,
+                marker_color=color,
+                **kwargs,
+            )
+        t = fig.data[-1]
+        xaxis, yaxis = t.xaxis, t.yaxis
+    m, M = min(frames_indices), max(frames_indices)
+    getattr(fig.layout, xaxis if xaxis is not None else "xaxis").range = [
+        m - (M - m) * 0.05,
+        M + (M - m) * 0.05,
+    ]
+    m, M = np.min(B_array), np.max(B_array)
+    getattr(fig.layout, yaxis if yaxis is not None else "yaxis").range = [
+        m - (M - m) * 0.05,
+        M + (M - m) * 0.05,
+    ]
+    frames = []
+    for ind, _ in enumerate(frames_indices):
+        data = []
+        for sens, B in zip(sensors, B_array):
+            color = Config.display.context.colors.get(sens, None)
+            for i in coords_indices:
+                k = "xyz"[i]
+                kwargs = dict(
+                    name=f"{field}_{sens}",
+                    xaxis=xaxis,
+                    yaxis=yaxis,
+                    legendgroup=f"{sens}",
+                    showlegend=False,
+                )
+                data.extend(
+                    [
+                        go.Scatter(
+                            x=frames_indices,
+                            y=B.T[i],
+                            mode="lines",
+                            line_dash=xyz_linestyles[i],
+                            line_color=color,
+                            **kwargs,
+                        ),
+                        go.Scatter(
+                            x=[ind],
+                            y=[B.T[i][ind]],
+                            mode="markers",
+                            marker_size=10,
+                            marker_color=color,
+                            **kwargs,
+                        ),
+                    ]
+                )
+        frames.append(dict(data=data))
+    fig.frames = frames
