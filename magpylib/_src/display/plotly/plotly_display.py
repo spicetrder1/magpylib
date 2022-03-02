@@ -932,7 +932,7 @@ def animate_path(
 
     if animation_slider:
         sliders_dict = {
-            "active": len(path_indices)-1,
+            "active": len(path_indices) - 1,
             "yanchor": "top",
             "font": {"size": 10},
             "xanchor": "left",
@@ -1354,17 +1354,21 @@ def draw_sensor_values(
         t = fig.data[-1]
         xaxis, yaxis = t.xaxis, t.yaxis
         m, M = min(frames_indices), max(frames_indices)
-        getattr(fig.layout, 'xaxis' if xaxis in (None, 'x') else 'xaxis'+xaxis[1]).range = [
+        getattr(
+            fig.layout, "xaxis" if xaxis in (None, "x") else "xaxis" + xaxis[1]
+        ).range = [
             m - (M - m) * 0.05,
             M + (M - m) * 0.05,
         ]
         m, M = np.min(BH_array), np.max(BH_array)
-        getattr(fig.layout, 'yaxis' if yaxis in (None, 'y') else 'yaxis'+yaxis[1]).range = [
+        getattr(
+            fig.layout, "yaxis" if yaxis in (None, "y") else "yaxis" + yaxis[1]
+        ).range = [
             m - (M - m) * 0.05,
             M + (M - m) * 0.05,
         ]
     frames = []
-    for ind in enumerate(frames_indices):
+    for ind, _ in enumerate(frames_indices):
         data = []
         for sens, BH in zip(sensors, BH_array):
             color = Config.display.context.colors.get(sens, None)
