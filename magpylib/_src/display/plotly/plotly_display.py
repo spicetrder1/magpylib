@@ -1304,7 +1304,7 @@ def batch_animate_subplots(ctx, show_fn, **kwargs):
 def draw_sensor_values(
     flat_obj_list, fig, row, col, animation_path, field="B", **kwargs
 ):
-    """ssadf"""
+    """draws and animates sensor values over a path in a subplot"""
     sources = format_obj_input(flat_obj_list, allow="sources")
     sensors = format_obj_input(flat_obj_list, allow="sensors")
     # pylint: disable=import-outside-toplevel
@@ -1364,7 +1364,7 @@ def draw_sensor_values(
             M + (M - m) * 0.05,
         ]
     frames = []
-    for ind, find in enumerate(frames_indices):
+    for ind in enumerate(frames_indices):
         data = []
         for sens, BH in zip(sensors, BH_array):
             color = Config.display.context.colors.get(sens, None)
@@ -1388,8 +1388,8 @@ def draw_sensor_values(
                             **kwargs,
                         ),
                         go.Scatter(
-                            x=[find],
-                            y=[BH.T[i][ind]],
+                            x=[frames_indices[ind]],
+                            y=[BH.T[i][frames_indices[ind]]],
                             mode="markers",
                             marker_size=10,
                             marker_color=color,
