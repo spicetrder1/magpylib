@@ -1319,10 +1319,9 @@ def draw_sensor_values(
 
     BH_array = getBH_level2(sources, sensors, sumup=True, squeeze=False, field=field)
     BH_array = BH_array[0]  # select first source
-    BH_array = BH_array.swapaxes(
-        0, 1
-    )  # make first index to be Sensors index, second is path index
-    BH_array = BH_array.mean(axis=-2)  # average on pixel
+    BH_array = BH_array.swapaxes(0, 1)  # swap axes to have sensors first, path second
+    if BH_array.ndim == 4:  # average on pixel if any
+        BH_array = BH_array.mean(axis=-2)
 
     for sens, BH in zip(sensors, BH_array):
         color = Config.display.context.colors.get(sens, None)
