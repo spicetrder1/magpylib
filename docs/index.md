@@ -26,18 +26,22 @@ or
 conda install magpylib
 ```
 
-This **Example code** calculates the magnetic field of a cylindrical magnet.
+The following **Example code** calculates the magnetic field of a cylindrical magnet:
 
 ```python
 import magpylib as magpy
-s = magpy.magnet.Cylinder(magnetization=(0,0,350), dimension=(4,5))
-observer_pos = (4,4,4)
-print(s.getB(observer_pos))
+src = magpy.magnet.Cylinder(
+    magnetization=(0,0,350),
+    dimension=(4,5),
+    position=(1,2,3))
+obs = (4,4,4)
+B = src.getB(obs)
+print(B)
 
-# Output: [ 5.08641867  5.08641867 -0.60532983]
+# out: [ 10.30092924   6.86728616 -20.96623472]
 ```
 
-A cylinder shaped permanent magnet with diameter and height of 4 and 5 millimeter, respectively, is created in a global coordinate system with cylinder axis parallel to the z-axis and geometric magnet center in the origin. The magnetization is homogeneous and points in z-direction with an amplitude of 350 millitesla. The magnetic field is calculated in units of millitesla at the observer position (4,4,4) in units of millimeter.
+Here, a cylinder shaped permanent magnet with diameter/height of 4/5 millimeters is created in a global coordinate system with cylinder axis parallel to the z-axis and geometric magnet center at position (1,2,3). The magnetization is homogeneous and points in z-direction with an amplitude of 350 millitesla (=$\mu_0\times M$). The B-field is calculated in units of millitesla at the observer position (4,4,4).
 
 ```{toctree}
 :caption: 'Content:'
@@ -48,11 +52,15 @@ _pages/*
 ```
 
 ```{toctree}
-:caption: 'Changelog:'
+:caption: Example galleries
 :glob: true
 :maxdepth: 2
 
-_changelog.md
+examples/01_fundamentals.md
+examples/02_graphic_output.md
+examples/03_advanced_features.md
+examples/04_application_examples.md
+
 ```
 
 ```{toctree}
@@ -64,17 +72,18 @@ _autogen/magpylib
 ```
 
 ```{toctree}
-:caption: Example galleries
+:caption: 'Changelog:'
 :glob: true
 :maxdepth: 2
 
-examples/01_core_functionality.md
-examples/02_display_features.md
-examples/03_advanced_examples.md
-
+_changelog.md
 ```
 
 # Index
 
 - {ref}`genindex`
 - {ref}`modindex`
+
+```bash
+
+```

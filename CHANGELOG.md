@@ -3,14 +3,14 @@ All notable changes to magpylib are documented here.
 
 # Releases
 
-## [Unreleased v4]
+## [Unreleased]
 This is a major update that includes
 
 - API changes
 - New features
 - Improved internal workings
 ### Added
-- New computaion core: ([#376](https://github.com/magpylib/magpylib/issues/376))
+- New computation core: ([#376](https://github.com/magpylib/magpylib/issues/376))
   - top level subpackage `magpylib.core` where all field expression implementations can be accessed directly.
 - New sources classes:
   - New `CylinderSegment` computation with dimension `(r1,r2,h,phi1,phi2)` with the inner radius `r1`, the outer radius `r2` the height `h` and the cylinder section angles `phi1 < phi2`. ([#386](https://github.com/magpylib/magpylib/issues/386), [#385](https://github.com/magpylib/magpylib/issues/385))
@@ -30,7 +30,6 @@ This is a major update that includes
 - `Collection` objects can now be composed of `sources`, `sensors` or both types. The `getB` and `getH` functions accommodate for all cases. ([#410](https://github.com/magpylib/magpylib/issues/410), [#415](https://github.com/magpylib/magpylib/pull/415), [#297](https://github.com/magpylib/magpylib/issues/297))
 - `Collection` has it's own `position`, `orientation` and `style`. This is useful to build compound objects. ([#444](https://github.com/magpylib/magpylib/issues/444))
 - All scipy Rotation forms are now also object methods ([#427](https://github.com/magpylib/magpylib/pull/427))
-- The new `absolute` argument for the `move` method enables the absolute positioning in the global coordinate system ([#444](https://github.com/magpylib/magpylib/issues/444))
 
 
 ### Changed
@@ -51,16 +50,16 @@ This is a major update that includes
 
 ### Updated
 - Computation:
-  - Improoved field computations: ([#374](https://github.com/magpylib/magpylib/issues/374))
-    - negative dimension input taken as absolute when only positive dimensions are allowed
-    - scale invariant field evaluations
-    - special cases caught within 1e-15 rtol and atol to account for numerical imprecision with positioning (e.g. object rotation).
-    - supress numpy divide/invalid warnings. return np.nan as (0,0,0) (e.g. on magnet edges or on line currents) and allow return of np.inf.
-  - Updated `Cylinder` diametral magnetization computation with novel closed form implementation. 
+  - Improved field computations: ([#374](https://github.com/magpylib/magpylib/issues/374))
+    - Negative dimension input taken as absolute when only positive dimensions are allowed
+    - Scale invariant field evaluations
+    - Special cases caught within 1e-15 rtol and atol to account for numerical imprecision with positioning (e.g. object rotation).
+    - Supress numpy divide/invalid warnings. return np.nan as (0,0,0) (e.g. on magnet edges or on line currents) and allow return of np.inf.
+  - Updated `Cylinder` diametral magnetization computation with novel closed form implementation.
     - Much faster (100-1000x)
     - Numerically stable for small `r`.
   - Improved performance of `getB` and `getH` functions and methods.
-  - Improved numerical stability of current Loop field. [#374](https://github.com/magpylib/magpylib/issues/374) 
+  - Improved numerical stability of current Loop field. [#374](https://github.com/magpylib/magpylib/issues/374)
 - Other
   - Added `__len__` dunder for `Collection` ([#383](https://github.com/magpylib/magpylib/issues/383))
 - Docs:
@@ -73,7 +72,6 @@ This is a major update that includes
   - `Collection` of `Lines` return incorret field ([#368](https://github.com/magpylib/magpylib/issues/368))
   - Field array dimension wrongly reduced when `sumup=True` and `squeeze=False` ind `getB` and `getH` functions ([#425](https://github.com/magpylib/magpylib/issues/425), [#426](https://github.com/magpylib/magpylib/pull/426))
 - UI:
-  - Adding multiple `Collection` objects does not mutate the first element.
   - Fix empty display ([#401](https://github.com/magpylib/magpylib/issues/401))
 
 ### Removed
@@ -82,7 +80,30 @@ This is a major update that includes
 
 
 ---
+## [3.0.4] - 2022-02-17
+
+- fix `Collection` operation tests
+
+---
+## [3.0.3] - 2022-02-17
+
+### Fixed
+- When adding with `Source + Collection` to create a new `Collection`, the original now remains unaffected ([#472](https://github.com/magpylib/magpylib/issues/472))
+
+---
+
 ## [3.0.2] - 2021-06-27
+- Update release version and license year ([#343](https://github.com/magpylib/magpylib/pull/343), [#344](https://github.com/magpylib/magpylib/pull/344))
+
+---
+
+## [3.0.1] - 2021-06-27
+
+- Add deployment automation ([#260](https://github.com/magpylib/magpylib/issues/260), [#296](https://github.com/magpylib/magpylib/issues/296), [#341](https://github.com/magpylib/magpylib/pull/341), [#342](https://github.com/magpylib/magpylib/pull/342))
+
+
+---
+## [3.0.0] - 2021-06-27
 
 This is a major update that includes
 
@@ -114,7 +135,7 @@ This is a major update that includes
     - `.display()` method for quick self-inspection.
     - `getB()` and `getH()` methods for fast field computations
     - `__repr__` attribute defined and will return their type and their `id`.
-- Other new features:  
+- Other new features:
   - The top-level `Config` allows users to access and edit Magpylib default values.
 ### Changed
 - Renamed modules:
@@ -128,7 +149,7 @@ This is a major update that includes
     - `angle` and `axis` are replaced by `orientation`
     - `dimension` is replaced by `diameter` for Loop and Sphere classes.
     - `angle`&`axis` are replaced by `orientation` (see [Added](#Added) Section)
-  
+
 - Modified rotate methods:
   - The class methods `.rotate(angle, axis, anchor)` have been replaced by a new `.rotate(rotation, anchor, increment, start)` method where `rotation` ist a scipy `Rotation` object.
   - The original angle-axis-anchor rotation is now provided by the new method `.rotate_from_angax(angle, axis, anchor, increment, start, degrees)`.
@@ -318,8 +339,12 @@ The first official release of the magpylib library.
 - Collection class
 
 ---
-[Unreleased]:https://github.com/magpylib/magpylib/compare/3.0.2...HEAD
-[3.0.2]:https://github.com/magpylib/magpylib/compare/2.3.0-beta...3.0.2
+[Unreleased]:https://github.com/magpylib/magpylib/compare/3.0.4...HEAD
+[3.0.4]:https://github.com/magpylib/magpylib/compare/3.0.3...3.0.4
+[3.0.3]:https://github.com/magpylib/magpylib/compare/3.0.2...3.0.3
+[3.0.2]:https://github.com/magpylib/magpylib/compare/3.0.1...3.0.2
+[3.0.1]:https://github.com/magpylib/magpylib/compare/3.0.0...3.0.1
+[3.0.0]:https://github.com/magpylib/magpylib/compare/2.3.0-beta...3.0.0
 [2.3.0b]:https://github.com/magpylib/magpylib/compare/2.1.0-beta...2.3.0-beta
 [2.1.0b]:https://github.com/magpylib/magpylib/compare/2.0.0-beta...2.1.0-beta
 [2.0.0b]:https://github.com/magpylib/magpylib/compare/1.2.1-beta...2.0.0-beta
