@@ -941,7 +941,7 @@ def animate_path(
                 "visible": True,
                 "xanchor": "right",
             },
-            "pad": {"b": 10, "t": 10},
+            "pad": {"b": 10, "t": 25},
             "len": 0.9,
             "x": 0.1,
             "y": 0,
@@ -969,7 +969,7 @@ def animate_path(
             },
         ],
         "direction": "left",
-        "pad": {"r": 10, "t": 20},
+        "pad": {"r": 10, "t": 35},
         "showactive": False,
         "type": "buttons",
         "x": 0.1,
@@ -1038,7 +1038,6 @@ def get_animation_path_params(
     animation_fps=30,
     animation_maxfps=50,
     animation_maxframes=200,
-    animation_slider=False,
 ):
     """Make sure the number of frames does not exceed the max frames and max frame rate
     # downsample if necessary"""
@@ -1176,21 +1175,21 @@ def display_plotly(
     if color_sequence is None:
         color_sequence = Config.display.colorsequence
     with fig.batch_update():
-        if animation is not False:
+        if kwargs.get("field", "").startswith(("H", "B")):
+            draw_sensor_values(
+                flat_obj_list,
+                fig=fig,
+                row=row,
+                col=col,
+                animation_path=animation_path,
+                **kwargs,
+            )
+        elif animation is not False:
             animated_subplots = Config.display.context.subplots
             if (row is not None or col is not None) and not animated_subplots:
                 raise NotImplementedError(
                     "Animation in combination with subplots must be called via the `with` "
                     "statement. Check the `magpylib.display_context` docstring for examples."
-                )
-            if kwargs.get("field", "").startswith(("H", "B")):
-                return draw_sensor_values(
-                    flat_obj_list,
-                    fig=fig,
-                    row=row,
-                    col=col,
-                    animation_path=animation_path,
-                    **kwargs,
                 )
             title = "3D-Paths Animation" if title is None else title
             animate_path(
@@ -1278,6 +1277,11 @@ def batch_animate_subplots(ctx, show_fn, **kwargs):
     all_objs = format_obj_input(all_objs, allow="sources+sensors+collections")
 
     anim_kwargs = process_animation_kwargs(kwargs.get("animation", True), kwargs)[-1]
+    anim_kwargs = {
+        k: v
+        for k, v in anim_kwargs.items()
+        if k.split("_")[1] in ("time", "fps", "maxframes", "maxfps")
+    }
     anim_path = get_animation_path_params(all_objs, **anim_kwargs)
 
     fig = ctx.canvas
@@ -1302,7 +1306,14 @@ def batch_animate_subplots(ctx, show_fn, **kwargs):
 
 
 def draw_sensor_values(
-    flat_obj_list, fig, row, col, animation_path, field="B", layout=None, **kwargs
+    flat_obj_list,
+    fig,
+    row=None,
+    col=None,
+    animation_path=None,
+    field="B",
+    layout=None,
+    **kwargs,
 ):
     """draws and animates sensor values over a path in a subplot"""
     if layout is None:
@@ -1316,7 +1327,6 @@ def draw_sensor_values(
     # pylint: disable=import-outside-toplevel
     from magpylib._src.fields.field_wrap_BH_level3 import getBH_level2
 
-    frames_indices = np.array(animation_path[0])
     coords_indices = {0, 1, 2}
     bh = field
     if len(field) > 1:
@@ -1330,14 +1340,18 @@ def draw_sensor_values(
     if BH_array.ndim == 4:  # average on pixel if any
         BH_array = BH_array.mean(axis=-2)
 
+    if animation_path is None:
+        frames_indices = [*range(BH_array.shape[1])]
+    else:
+        frames_indices = np.array(animation_path[0])
     for sens, BH in zip(sensors, BH_array):
         color = Config.display.context.colors.get(sens, None)
         for i in coords_indices:
             k = "xyz"[i]
             kwargs = dict(
-                name=f"{field}{k}_{sens}",
+                name=f"{bh}{k}_{sens}",
                 legendgroup=f"{sens}",
-                showlegend=False,
+                showlegend=True,
                 row=row,
                 col=col,
             )
@@ -1349,69 +1363,72 @@ def draw_sensor_values(
                 line_color=color,
                 **kwargs,
             )
-            fig.add_scatter(
-                x=[frames_indices[-1]],
-                y=[BH.T[i][frames_indices[-1]]],
-                mode="markers",
-                marker_size=10,
-                marker_color=color,
-                **kwargs,
-            )
-        t = fig.data[-1]
-        xaxis, yaxis = t.xaxis, t.yaxis
-        m, M = min(frames_indices), max(frames_indices)
-        fig_xaxis = getattr(
-            fig.layout, "xaxis" if xaxis in (None, "x") else "xaxis" + xaxis[1]
-        )
-        fig_xaxis.range = [
-            m - (M - m) * 0.05,
-            M + (M - m) * 0.05,
-        ]
-        # fig_xaxis.title = 'Path indices'
-        m, M = np.min(BH_array), np.max(BH_array)
-        fig_yaxis = getattr(
-            fig.layout, "yaxis" if yaxis in (None, "y") else "yaxis" + yaxis[1]
-        )
-        fig_yaxis.title = f"{field} [mT]"
-        fig_yaxis.range = [
-            m - (M - m) * 0.05,
-            M + (M - m) * 0.05,
-        ]
-        # fig_yaxis.ticklabelposition="inside top"
-    frames = []
-    for ind, _ in enumerate(frames_indices):
-        data = []
-        for sens, BH in zip(sensors, BH_array):
-            color = Config.display.context.colors.get(sens, None)
-            for i in coords_indices:
-                k = "xyz"[i]
-                kwargs = dict(
-                    name=f"{field}_{sens}",
-                    xaxis=xaxis,
-                    yaxis=yaxis,
-                    legendgroup=f"{sens}",
-                    showlegend=False,
+            if animation_path is not None:
+                fig.add_scatter(
+                    x=[frames_indices[-1]],
+                    y=[BH.T[i][frames_indices[-1]]],
+                    mode="markers",
+                    marker_size=10,
+                    marker_color=color,
+                    **kwargs,
                 )
-                data.extend(
-                    [
-                        go.Scatter(
-                            x=frames_indices,
-                            y=BH.T[i][frames_indices],
-                            mode="lines",
-                            line_dash=xyz_linestyles[i],
-                            line_color=color,
-                            **kwargs,
-                        ),
-                        go.Scatter(
-                            x=[frames_indices[ind]],
-                            y=[BH.T[i][frames_indices[ind]]],
-                            mode="markers",
-                            marker_size=10,
-                            marker_color=color,
-                            **kwargs,
-                        ),
-                    ]
-                )
-        frames.append(dict(data=data))
-    fig.frames = frames
+    t = fig.data[-1]
+    xaxis, yaxis = t.xaxis, t.yaxis
+    m, M = min(frames_indices), max(frames_indices)
+    fig_xaxis = getattr(
+        fig.layout, "xaxis" if xaxis in (None, "x") else "xaxis" + xaxis[1]
+    )
+    fig_xaxis.range = [
+        m - (M - m) * 0.05,
+        M + (M - m) * 0.05,
+    ]
+    fig_xaxis.title = "Path indices"
+    m, M = np.min(BH_array), np.max(BH_array)
+    fig_yaxis = getattr(
+        fig.layout, "yaxis" if yaxis in (None, "y") else "yaxis" + yaxis[1]
+    )
+    fig_yaxis.title = f"{field} [mT]"
+    fig_yaxis.range = [
+        m - (M - m) * 0.05,
+        M + (M - m) * 0.05,
+    ]
+    # fig_yaxis.ticklabelposition="inside" # prettier but flickers
+
+    if animation_path is not None:
+        frames = []
+        for ind, _ in enumerate(frames_indices):
+            data = []
+            for sens, BH in zip(sensors, BH_array):
+                color = Config.display.context.colors.get(sens, None)
+                for i in coords_indices:
+                    k = "xyz"[i]
+                    kwargs = dict(
+                        name=f"{bh}_{sens}",
+                        xaxis=xaxis,
+                        yaxis=yaxis,
+                        legendgroup=f"{sens}",
+                        showlegend=True,
+                    )
+                    data.extend(
+                        [
+                            go.Scatter(
+                                x=frames_indices,
+                                y=BH.T[i][frames_indices],
+                                mode="lines",
+                                line_dash=xyz_linestyles[i],
+                                line_color=color,
+                                **kwargs,
+                            ),
+                            go.Scatter(
+                                x=[frames_indices[ind]],
+                                y=[BH.T[i][frames_indices[ind]]],
+                                mode="markers",
+                                marker_size=10,
+                                marker_color=color,
+                                **kwargs,
+                            ),
+                        ]
+                    )
+            frames.append(dict(data=data))
+        fig.frames = frames
     fig.update_layout(**layout_kwargs)
