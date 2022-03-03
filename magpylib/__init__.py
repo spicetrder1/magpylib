@@ -129,7 +129,7 @@ __version__ = '4.0.0'
 __author__ =  'Michael Ortner & Alexandre Boisselet'
 __credits__ = 'The Magpylib community'
 __all__ = ['magnet', 'current', 'misc', 'getB', 'getH',
-    'Sensor', 'Collection', 'show', 'display_context', 'defaults', '__version__',
+    'Sensor', 'Collection', 'show', 'show_context', 'defaults', '__version__',
     '__author__', '__credits__', 'core', 'display']
 
 # create interface to outside of package
@@ -138,4 +138,4 @@ from magpylib._src.defaults.defaults_classes import default_settings as defaults
 from magpylib._src.fields import getB, getH
 from magpylib._src.obj_classes import Sensor
 from magpylib._src.obj_classes.class_Collection import Collection
-from magpylib._src.display.display import show, display_context
+from magpylib._src.display.display import show, show_context

@@ -29,7 +29,7 @@ def _show(
     """
     Display objects and paths graphically.
 
-    The private function is needed to intercept `show` kwargs from the `display_context` manager.
+    The private function is needed to intercept `show` kwargs from the `show_context` manager.
 
     See `show` function for extended docstring
     """
@@ -157,9 +157,9 @@ def show(*objects, **kwargs):
 
     ctx = Config.display.context
     kwargs = {**ctx.kwargs, **kwargs}
-    # allows kwargs to override within `with display_context`
+    # allows kwargs to override within `with show_context`
     # Example:
-    # with magpy.display_context(canvas=fig, zoom=1):
+    # with magpy.show_context(canvas=fig, zoom=1):
     #   src1.show(row=1, col=1)
     #   magpy.show(src2, row=1, col=2)
     #   magpy.show(src1, src2, row=1, col=3, zoom=10)
@@ -181,10 +181,10 @@ def show(*objects, **kwargs):
 
 
 @contextmanager
-def display_context(**kwargs):
+def show_context(**kwargs):
     """Context manager to temporarily set display settings in the `with` statement context.
 
-    You need to invoke as ``display_context(pattern1=value1, pattern2=value2)``.
+    You need to invoke as ``show_context(pattern1=value1, pattern2=value2)``.
 
     Examples
     --------
@@ -196,7 +196,7 @@ def display_context(**kwargs):
     >>> cube = magpy.magnet.Cuboid((0,0,1),(1,1,1))
     >>> cylinder = magpy.magnet.Cylinder((0,0,1),(1,1))
     >>> sphere = magpy.magnet.Sphere((0,0,1),diameter=1)
-    >>> with magpy.display_context(backend='plotly'):
+    >>> with magpy.show_context(backend='plotly'):
     >>>     cube.show() # -> displays with plotly
     >>>     cylinder.show() # -> displays with plotly
     >>> sphere.show() # -> displays with matplotlib
@@ -218,7 +218,7 @@ def display_context(**kwargs):
     >>> fig = go.Figure()
     >>> fig.set_subplots(rows=1, cols=3, specs=[[{"type": "scene"}] * 3])
     >>> # draw the objects
-    >>> with magpy.display_context(canvas=fig, backend='plotly', animation=2):
+    >>> with magpy.show_context(canvas=fig, backend='plotly', animation=2):
     >>>     src1.show(row=1, col=1)
     >>>     #magpy.show(src2, row=1, col=2)
     >>>     #magpy.show(src1, src2, row=1, col=3)

@@ -298,7 +298,7 @@ def test_bad_animation_value():
     with pytest.raises(MagpylibBadUserInput):
         src.show(canvas=fig, animation=-1)
 
-def test_subplots_display_context():
+def test_subplots_show_context():
     """test subplots"""
     # define sources
     src1 = magpy.magnet.Sphere(magnetization=(0, 0, 1), diameter=1)
@@ -316,7 +316,7 @@ def test_subplots_display_context():
     fig.set_subplots(rows=1, cols=3, specs=[[{"type": "scene"}] * 3])
 
     # draw the objects
-    with magpy.display_context(canvas=fig, backend='plotly', zoom=0):
+    with magpy.show_context(canvas=fig, backend='plotly', zoom=0):
         x = src1.show(row=1, col=1)
         assert x is None, "subplots display plotly subplot context test fail"
         x = magpy.show(src2, row=1, col=2)

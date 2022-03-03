@@ -1189,7 +1189,7 @@ def display_plotly(
             if (row is not None or col is not None) and not animated_subplots:
                 raise NotImplementedError(
                     "Animation in combination with subplots must be called via the `with` "
-                    "statement. Check the `magpylib.display_context` docstring for examples."
+                    "statement. Check the `magpylib.show_context` docstring for examples."
                 )
             title = "3D-Paths Animation" if title is None else title
             animate_path(
