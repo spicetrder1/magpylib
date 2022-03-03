@@ -1022,7 +1022,6 @@ def animate_path(
         for t in f["data"]:
             t["scene"] = fig.data[-1].scene
     fig.frames = frames
-    clean_legendgroups(fig)
     fig.update_layout(
         # height=None,
         title=title,
@@ -1207,9 +1206,9 @@ def display_plotly(
             traces_dicts = draw_frame(obj_list, color_sequence, zoom, **kwargs)
             traces = [t for traces in traces_dicts.values() for t in traces]
             fig.add_traces(traces, rows=row, cols=col)
-            clean_legendgroups(fig)
             fig.update_layout(title_text=title)
             apply_fig_ranges(fig, zoom=zoom)
+        clean_legendgroups(fig)
         fig.update_layout(legend_itemsizing="constant")
     if show_fig:
         fig.show(renderer=renderer)
