@@ -1097,7 +1097,7 @@ def display_plotly(
     row=None,
     col=None,
     animation_path=None,
-    output='model3d',
+    output="model3d",
     **kwargs,
 ):
 
@@ -1175,7 +1175,7 @@ def display_plotly(
     if color_sequence is None:
         color_sequence = Config.display.colorsequence
     with fig.batch_update():
-        if output!='model3d':
+        if output != "model3d":
             draw_sensor_values(
                 flat_obj_list,
                 fig=fig,
@@ -1211,7 +1211,7 @@ def display_plotly(
             fig.update_layout(title_text=title)
             apply_fig_ranges(fig, zoom=zoom)
         clean_legendgroups(fig)
-        fig.update_layout(legend_itemsizing="constant")
+        fig.update_layout(legend_itemsizing="constant", legend_groupclick="toggleitem")
     if show_fig:
         fig.show(renderer=renderer)
 
@@ -1266,9 +1266,9 @@ def clean_legendgroups(fig):
     for f in frames:
         legendgroups = []
         for t in f:
-            if t.legendgroup not in legendgroups:
+            if t.legendgroup not in legendgroups and t.legendgroup is not None:
                 legendgroups.append(t.legendgroup)
-            else:
+            elif t.legendgroup is not None and t.legendgrouptitle.text is None:
                 t.showlegend = False
 
 
@@ -1329,13 +1329,15 @@ def draw_sensor_values(
     from magpylib._src.fields.field_wrap_BH_level3 import getBH_level2
 
     coords_indices = {0, 1, 2}
-    bh = field
+    field_str = field
     if len(field) > 1:
         coords_indices = set("xyz".index(k) for k in field[1:])
-        bh = field[0]
+        field_str = field[0]
     xyz_linestyles = ("solid", "dash", "dot")
 
-    BH_array = getBH_level2(sources, sensors, sumup=True, squeeze=False, field=bh)
+    BH_array = getBH_level2(
+        sources, sensors, sumup=True, squeeze=False, field=field_str
+    )
     BH_array = BH_array[0]  # select first source
     BH_array = BH_array.swapaxes(0, 1)  # swap axes to have sensors first, path second
     if BH_array.ndim == 4:  # average on pixel if any
@@ -1345,37 +1347,59 @@ def draw_sensor_values(
         frames_indices = [*range(BH_array.shape[1])]
     else:
         frames_indices = np.array(animation_path[0])
-    for sens, BH in zip(sensors, BH_array):
+
+    def get_kwargs(mode, sens, field_str, BH, coord_ind, frame_ind):
         color = Config.display.context.colors.get(sens, None)
-        for i in coords_indices:
-            k = "xyz"[i]
-            kwargs = dict(
-                name=f"{bh}{k}_{sens}",
-                legendgroup=f"{sens}",
-                showlegend=True,
-                row=row,
-                col=col,
+        k = "xyz"[coord_ind]
+        name = (
+            "Sensor"
+            if sens.style.label is None or sens.style.label.strip() == ""
+            else sens.style.label
+        )
+        src_str = f"""{len(sources)} source{'s' if len(sources)>1 else ''}"""
+        kwargs = dict(
+            mode=mode,
+            name=f"{name}",
+            legendgroup=f"{field_str}{k}",
+            legendgrouptitle_text=f"{field_str}{k} from {src_str}",
+        )
+        if mode == "markers":
+            kwargs.update(
+                x=[frames_indices[frame_ind]],
+                y=[BH.T[coord_ind][frames_indices[frame_ind]]],
+                marker_size=10,
+                marker_color=color,
+                showlegend=False,
             )
-            fig.add_scatter(
+        else:
+            kwargs.update(
                 x=frames_indices,
-                y=BH.T[i][frames_indices],
-                mode="lines",
-                line_dash=xyz_linestyles[i],
+                y=BH.T[coord_ind][frames_indices],
+                line_dash=xyz_linestyles[coord_ind],
                 line_color=color,
-                **kwargs,
+                showlegend=True,
+            )
+        return kwargs
+
+    for sens, BH in zip(sensors, BH_array):
+        for coord_ind in coords_indices:
+            kwargs = dict(row=row, col=col)
+            fig.add_scatter(
+                **get_kwargs("lines", sens, field_str, BH, coord_ind, -1), **kwargs
             )
             if animation_path is not None:
                 fig.add_scatter(
-                    x=[frames_indices[-1]],
-                    y=[BH.T[i][frames_indices[-1]]],
-                    mode="markers",
-                    marker_size=10,
-                    marker_color=color,
+                    **get_kwargs("markers", sens, field_str, BH, coord_ind, -1),
                     **kwargs,
                 )
+
+    # extract axis info from one the traces (all are on the same axis)
+    # this is necessary to act on the right subplot
     t = fig.data[-1]
     xaxis, yaxis = t.xaxis, t.yaxis
     m, M = min(frames_indices), max(frames_indices)
+
+    # set subplot range
     fig_xaxis = getattr(
         fig.layout, "xaxis" if xaxis in (None, "x") else "xaxis" + xaxis[1]
     )
@@ -1396,38 +1420,26 @@ def draw_sensor_values(
     # fig_yaxis.ticklabelposition="inside" # prettier but flickers
 
     if animation_path is not None:
+        axis_kwargs = dict(xaxis=xaxis, yaxis=yaxis)
         frames = []
         for ind, _ in enumerate(frames_indices):
             data = []
             for sens, BH in zip(sensors, BH_array):
-                color = Config.display.context.colors.get(sens, None)
-                for i in coords_indices:
-                    k = "xyz"[i]
-                    kwargs = dict(
-                        name=f"{bh}_{sens}",
-                        xaxis=xaxis,
-                        yaxis=yaxis,
-                        legendgroup=f"{sens}",
-                        showlegend=True,
-                    )
+                for coord_ind in coords_indices:
                     data.extend(
                         [
-                            go.Scatter(
-                                x=frames_indices,
-                                y=BH.T[i][frames_indices],
-                                mode="lines",
-                                line_dash=xyz_linestyles[i],
-                                line_color=color,
-                                **kwargs,
-                            ),
-                            go.Scatter(
-                                x=[frames_indices[ind]],
-                                y=[BH.T[i][frames_indices[ind]]],
-                                mode="markers",
-                                marker_size=10,
-                                marker_color=color,
-                                **kwargs,
-                            ),
+                            {
+                                **get_kwargs(
+                                    "lines", sens, field_str, BH, coord_ind, ind
+                                ),
+                                **axis_kwargs,
+                            },
+                            {
+                                **get_kwargs(
+                                    "markers", sens, field_str, BH, coord_ind, ind
+                                ),
+                                **axis_kwargs,
+                            },
                         ]
                     )
             frames.append(dict(data=data))
