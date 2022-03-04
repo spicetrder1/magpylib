@@ -1097,6 +1097,7 @@ def display_plotly(
     row=None,
     col=None,
     animation_path=None,
+    output='model3d',
     **kwargs,
 ):
 
@@ -1174,13 +1175,14 @@ def display_plotly(
     if color_sequence is None:
         color_sequence = Config.display.colorsequence
     with fig.batch_update():
-        if kwargs.get("field", "").startswith(("H", "B")):
+        if output!='model3d':
             draw_sensor_values(
                 flat_obj_list,
                 fig=fig,
                 row=row,
                 col=col,
                 animation_path=animation_path,
+                field=output,
                 **kwargs,
             )
         elif animation is not False:
