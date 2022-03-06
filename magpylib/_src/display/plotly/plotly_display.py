@@ -1353,11 +1353,11 @@ def draw_sensor_values(
     def get_kwargs(mode, sens, field_str, BH, coord_ind, frame_ind):
         color = Config.display.context.colors.get(sens, None)
         k = "xyz"[coord_ind]
-        if len(sources)<8:
+        if len(sources) < 8:
             src_lst_str = "<br>".join(f" - {s}" for s in sources)
         else:
             counts = Counter(s.__class__.__name__ for s in sources)
-            src_lst_str = "<br>".join(f" {v}x {k}" for k,v in counts.items())
+            src_lst_str = "<br>".join(f" {v}x {k}" for k, v in counts.items())
         name = (
             "Sensor"
             if sens.style.label is None or sens.style.label.strip() == ""
@@ -1369,12 +1369,12 @@ def draw_sensor_values(
             name=f"{name}",
             legendgroup=f"{field_str}{k}",
             legendgrouptitle_text=f"{field_str}{k} from {src_str}",
-            text = 'Sources',
+            text="Sources",
             hovertemplate=(
                 "<b>Path index</b>: %{x}    "
                 f"<b>{field_str}{k}</b>: " + "%{y}T<br>"
                 f"<b>Sources</b>:<br>{src_lst_str}"
-                #"<extra></extra>",
+                # "<extra></extra>",
             ),
         )
         if mode == "markers":
@@ -1422,7 +1422,9 @@ def draw_sensor_values(
         M + (M - m) * 0.05,
     ]
     fig_xaxis.title = "Path indices"
-    BH_array_subset = BH_array[:, np.array(frames_indices).reshape(-1,1), coords_indices]
+    BH_array_subset = BH_array[
+        :, np.array(frames_indices).reshape(-1, 1), coords_indices
+    ]
     m, M = np.min(BH_array_subset), np.max(BH_array_subset)
     fig_yaxis = getattr(
         fig.layout, "yaxis" if yaxis in (None, "y") else "yaxis" + yaxis[1]
