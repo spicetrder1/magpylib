@@ -1329,10 +1329,10 @@ def draw_sensor_values(
     # pylint: disable=import-outside-toplevel
     from magpylib._src.fields.field_wrap_BH_level3 import getBH_level2
 
-    coords_indices = {0, 1, 2}
+    coords_indices = [0, 1, 2]
     field_str = field
     if len(field) > 1:
-        coords_indices = set("xyz".index(k) for k in field[1:])
+        coords_indices = list(set("xyz".index(k) for k in field[1:]))
         field_str = field[0]
     xyz_linestyles = ("solid", "dash", "dot")
 
@@ -1352,6 +1352,7 @@ def draw_sensor_values(
     def get_kwargs(mode, sens, field_str, BH, coord_ind, frame_ind):
         color = Config.display.context.colors.get(sens, None)
         k = "xyz"[coord_ind]
+        src_lst_str = "<br>".join(f" - {s}" for s in sources)
         name = (
             "Sensor"
             if sens.style.label is None or sens.style.label.strip() == ""
@@ -1363,6 +1364,13 @@ def draw_sensor_values(
             name=f"{name}",
             legendgroup=f"{field_str}{k}",
             legendgrouptitle_text=f"{field_str}{k} from {src_str}",
+            text = 'Sources',
+            hovertemplate=(
+                "<b>Path index</b>: %{x}    "
+                f"<b>{field_str}{k}</b>: " + "%{y}T<br>"
+                f"<b>Sources</b>:<br>{src_lst_str}"
+                #"<extra></extra>",
+            ),
         )
         if mode == "markers":
             kwargs.update(
@@ -1409,11 +1417,12 @@ def draw_sensor_values(
         M + (M - m) * 0.05,
     ]
     fig_xaxis.title = "Path indices"
-    m, M = np.min(BH_array), np.max(BH_array)
+    BH_array_subset = BH_array[:, np.array(frames_indices).reshape(-1,1), coords_indices]
+    m, M = np.min(BH_array_subset), np.max(BH_array_subset)
     fig_yaxis = getattr(
         fig.layout, "yaxis" if yaxis in (None, "y") else "yaxis" + yaxis[1]
     )
-    fig_yaxis.title = f"{field} [mT]"
+    fig_yaxis.title = f"{field} [T]"
     fig_yaxis.range = [
         m - (M - m) * 0.05,
         M + (M - m) * 0.05,
