@@ -3,6 +3,7 @@
 # pylint: disable=too-many-branches
 
 import numbers
+from collections import Counter
 from itertools import cycle, combinations
 from typing import Tuple
 import warnings
@@ -1352,7 +1353,11 @@ def draw_sensor_values(
     def get_kwargs(mode, sens, field_str, BH, coord_ind, frame_ind):
         color = Config.display.context.colors.get(sens, None)
         k = "xyz"[coord_ind]
-        src_lst_str = "<br>".join(f" - {s}" for s in sources)
+        if len(sources)<8:
+            src_lst_str = "<br>".join(f" - {s}" for s in sources)
+        else:
+            counts = Counter(s.__class__.__name__ for s in sources)
+            src_lst_str = "<br>".join(f" {v}x {k}" for k,v in counts.items())
         name = (
             "Sensor"
             if sens.style.label is None or sens.style.label.strip() == ""
