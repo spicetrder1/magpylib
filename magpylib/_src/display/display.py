@@ -83,8 +83,8 @@ def _show(
 def show(*objects, **kwargs):
     """Display objects and paths graphically.
 
-    Global graphic styles can be set with kwargs as style-dictionary or using
-    style-underscore_magic.
+    Global graphic styles can be set with kwargs as style dictionary or using
+    style underscore magic.
 
     Parameters
     ----------

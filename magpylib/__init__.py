@@ -125,15 +125,15 @@ and and the Plotly graphic backend.
 """
 
 # module level dunders
-__version__ = '4.0.0'
+__version__ = '4.0.0rc0'
 __author__ =  'Michael Ortner & Alexandre Boisselet'
 __credits__ = 'The Magpylib community'
 __all__ = ['magnet', 'current', 'misc', 'getB', 'getH',
     'Sensor', 'Collection', 'show', 'show_context', 'defaults', '__version__',
-    '__author__', '__credits__', 'core', 'display']
+    '__author__', '__credits__', 'core', 'graphics']
 
 # create interface to outside of package
-from magpylib import magnet, current, misc, core, display
+from magpylib import magnet, current, misc, core, graphics
 from magpylib._src.defaults.defaults_classes import default_settings as defaults
 from magpylib._src.fields import getB, getH
 from magpylib._src.obj_classes import Sensor
