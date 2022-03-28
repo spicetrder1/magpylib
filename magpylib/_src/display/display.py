@@ -1,6 +1,7 @@
 """ Display function codes"""
 
 import warnings
+from copy import deepcopy
 from contextlib import contextmanager
 from magpylib._src.defaults.defaults_classes import default_settings as Config
 from magpylib._src.utility import format_obj_input, test_path_format
@@ -28,7 +29,7 @@ def _show(
     """
     Display objects and paths graphically.
 
-    The private function is needed to intercept `show` kwargs from the `display_context` manager.
+    The private function is needed to intercept `show` kwargs from the `show_context` manager.
 
     See `show` function for extended docstring
     """
@@ -79,19 +80,11 @@ def _show(
         )
 
 
-def show(
-    *objects,
-    zoom=0,
-    animation=False,
-    markers=None,
-    backend=None,
-    canvas=None,
-    **kwargs,
-):
+def show(*objects, **kwargs):
     """Display objects and paths graphically.
 
-    Global graphic styles can be set with kwargs as style-dictionary or using
-    style-underscore_magic.
+    Global graphic styles can be set with kwargs as style dictionary or using
+    style underscore magic.
 
     Parameters
     ----------
@@ -161,52 +154,89 @@ def show(
     >>> magpy.show(src1, src2, style_color='r')
     --> graphic output
     """
-    kwargs = {**getattr(Config.display, "_kwargs", {}), **kwargs}
-    # TODO find a better way to override within `with display_context` only values that are
-    # different from the `show` function signature defaults
+
+    ctx = Config.display.context
+    kwargs = {**ctx.kwargs, **kwargs}
+    # allows kwargs to override within `with show_context`
     # Example:
-    # with magpy.display_context(canvas=fig, zoom=1):
+    # with magpy.show_context(canvas=fig, zoom=1):
     #   src1.show(row=1, col=1)
     #   magpy.show(src2, row=1, col=2)
     #   magpy.show(src1, src2, row=1, col=3, zoom=10)
     # # -> zoom=10 should override zoom=1 from context
 
-    input_kwargs = dict(
-        zoom=zoom, animation=animation, markers=markers, backend=backend, canvas=canvas,
-    )
-    defaults_kwargs = dict(
-        zoom=0, animation=False, markers=None, backend=None, canvas=None,
-    )
-    for k, v in input_kwargs.items():
-        if v != defaults_kwargs[k]:
-            kwargs[k] = v
-    _show(*objects, **kwargs)
+    if (
+        ctx.isrunning
+        and (kwargs.get("row", None) is not None or kwargs.get("col", None) is not None)
+        and ctx.kwargs.get("canvas", None) is not None
+        and ctx.kwargs.get("animation", False) is not False
+        and ctx.kwargs.get("backend", "") == "plotly"
+    ):
+        canvas = ctx.kwargs["canvas"]
+        ctx.canvas = canvas
+        kwargs["canvas"] = deepcopy(canvas)
+        ctx.subplots.append(dict(objects=objects, kwargs=kwargs))
+    else:
+        _show(*objects, **kwargs)
+
 
 
 @contextmanager
-def display_context(**kwargs):
+def show_context(**kwargs):
     """Context manager to temporarily set display settings in the `with` statement context.
 
-    You need to invoke as ``display_context(pattern1=value1, pattern2=value2)``.
+    You need to invoke as ``show_context(pattern1=value1, pattern2=value2)``.
 
     Examples
     --------
+
+    Basic example
+
     >>> import magpylib as magpy
     >>> magpy.defaults.reset() # may be necessary in a live kernel context
     >>> cube = magpy.magnet.Cuboid((0,0,1),(1,1,1))
     >>> cylinder = magpy.magnet.Cylinder((0,0,1),(1,1))
     >>> sphere = magpy.magnet.Sphere((0,0,1),diameter=1)
-    >>> with magpy.display_context(backend='plotly'):
+    >>> with magpy.show_context(backend='plotly'):
     >>>     cube.show() # -> displays with plotly
     >>>     cylinder.show() # -> displays with plotly
     >>> sphere.show() # -> displays with matplotlib
+
+    Display subplots with animation
+
+    >>> import numpy as np
+    >>> import plotly.graph_objects as go
+    >>> import magpylib as magpy
+    >>> # define sources
+    >>> src1 = magpy.magnet.Sphere(magnetization=(0, 0, 1), diameter=1)
+    >>> src2 = magpy.magnet.Cylinder(magnetization=(0, 0, 1), dimension=(1, 2))
+    >>> # manipulate first source to create a path
+    >>> src1.move(np.linspace((0, 0, 0.1), (0, 0, 8), 20))
+    >>> # manipulate second source
+    >>> src2.move(np.linspace((0, 0, 0.1), (5, 0, 5), 50), start=0)
+    >>> src2.rotate_from_angax(angle=np.linspace(0, 600, 50), axis="z", anchor=0, start=0)
+    >>> # setup plotly figure and subplots
+    >>> fig = go.Figure()
+    >>> fig.set_subplots(rows=1, cols=3, specs=[[{"type": "scene"}] * 3])
+    >>> # draw the objects
+    >>> with magpy.show_context(canvas=fig, backend='plotly', animation=2):
+    >>>     src1.show(row=1, col=1)
+    >>>     #magpy.show(src2, row=1, col=2)
+    >>>     #magpy.show(src1, src2, row=1, col=3)
+    >>> # display the system
+    >>> fig.show()
     """
     # pylint: disable=protected-access
-    if not hasattr(Config.display, "_kwargs"):
-        Config.display._kwargs = {}
-    conf_disp_orig = {**Config.display._kwargs}
+
+    ctx = Config.display.context
+
     try:
-        Config.display._kwargs.update(**kwargs)
+        ctx.isrunning = True
+        ctx.kwargs.update(**kwargs)
         yield _show
+        if ctx.subplots:
+            # pylint: disable=import-outside-toplevel
+            from magpylib._src.display.plotly.plotly_display import batch_animate_subplots
+            batch_animate_subplots(ctx, show_fn=_show, **kwargs)
     finally:
-        Config.display._kwargs = {**conf_disp_orig}
+        ctx.reset()

@@ -3,6 +3,7 @@
 # pylint: disable=too-many-branches
 
 import numbers
+from collections import Counter
 from itertools import cycle, combinations
 from typing import Tuple
 import warnings
@@ -39,13 +40,13 @@ from magpylib._src.defaults.defaults_utility import (
 
 from magpylib._src.input_checks import check_excitations
 from magpylib._src.utility import unit_prefix, format_obj_input
-from magpylib._src.display.plotly.plotly_base_traces import (
-    make_BaseCuboid,
-    make_BaseCylinderSegment,
-    make_BaseEllipsoid,
-    make_BasePrism,
-    # make_BaseCone,
-    make_BaseArrow,
+from magpylib._src.display.base_traces import (
+    make_Cuboid as make_BaseCuboid,
+    make_CylinderSegment as make_BaseCylinderSegment,
+    make_Ellipsoid as make_BaseEllipsoid,
+    make_Prism as make_BasePrism,
+    # make_Pyramid as make_BasePyramid,
+    make_Arrow as make_BaseArrow,
 )
 from magpylib._src.display.plotly.plotly_utility import (
     merge_mesh3d,
@@ -137,11 +138,16 @@ def make_Loop(
 
 
 def make_DefaultTrace(
-    obj, position=(0.0, 0.0, 0.0), orientation=None, color=None, style=None, **kwargs,
+    obj,
+    position=(0.0, 0.0, 0.0),
+    orientation=None,
+    color=None,
+    style=None,
+    **kwargs,
 ) -> dict:
     """
     Creates the plotly scatter3d parameters for an object with no specifically supported
-    representation. The object will be reprensented by a scatter point and text above with object
+    representation. The object will be represented by a scatter point and text above with object
     name.
     """
 
@@ -181,13 +187,13 @@ def make_Dipole(
     provided arguments
     """
     moment_mag = np.linalg.norm(moment)
-    default_suffix = f" (moment={unit_prefix(moment_mag)}T/m³)"
+    default_suffix = f" (moment={unit_prefix(moment_mag)}mT mm³)"
     name, name_suffix = get_name_and_suffix("Dipole", default_suffix, style)
     size = style.size
     if autosize is not None:
         size *= autosize
     dipole = make_BaseArrow(
-        base_vertices=10, diameter=0.3 * size, height=size, pivot=style.pivot
+        "plotly-dict", base=10, diameter=0.3 * size, height=size, pivot=style.pivot
     )
     nvec = np.array(moment) / moment_mag
     zaxis = np.array([0, 0, 1])
@@ -200,7 +206,14 @@ def make_Dipole(
     orientation = orientation * mag_orient
     mag = np.array((0, 0, 1))
     return _update_mag_mesh(
-        dipole, name, name_suffix, mag, orientation, position, style, **kwargs,
+        dipole,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -219,15 +232,22 @@ def make_Cuboid(
     d = [unit_prefix(d / 1000) for d in dimension]
     default_suffix = f" ({d[0]}m|{d[1]}m|{d[2]}m)"
     name, name_suffix = get_name_and_suffix("Cuboid", default_suffix, style)
-    cuboid = make_BaseCuboid(dimension=dimension)
+    cuboid = make_BaseCuboid("plotly-dict", dimension=dimension)
     return _update_mag_mesh(
-        cuboid, name, name_suffix, mag, orientation, position, style, **kwargs,
+        cuboid,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
 def make_Cylinder(
     mag=(0.0, 0.0, 1000.0),
-    base_vertices=50,
+    base=50,
     diameter=1.0,
     height=1.0,
     position=(0.0, 0.0, 0.0),
@@ -243,10 +263,17 @@ def make_Cylinder(
     default_suffix = f" (D={d[0]}m, H={d[1]}m)"
     name, name_suffix = get_name_and_suffix("Cylinder", default_suffix, style)
     cylinder = make_BasePrism(
-        base_vertices=base_vertices, diameter=diameter, height=height,
+        "plotly-dict", base=base, diameter=diameter, height=height,
     )
     return _update_mag_mesh(
-        cylinder, name, name_suffix, mag, orientation, position, style, **kwargs,
+        cylinder,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -266,7 +293,9 @@ def make_CylinderSegment(
     d = [unit_prefix(d / (1000 if i < 3 else 1)) for i, d in enumerate(dimension)]
     default_suffix = f" (r={d[0]}m|{d[1]}m, h={d[2]}m, φ={d[3]}°|{d[4]}°)"
     name, name_suffix = get_name_and_suffix("CylinderSegment", default_suffix, style)
-    cylinder_segment = make_BaseCylinderSegment(*dimension, vert=vert)
+    cylinder_segment = make_BaseCylinderSegment(
+        "plotly-dict", dimension=dimension, vert=vert
+    )
     return _update_mag_mesh(
         cylinder_segment,
         name,
@@ -295,9 +324,16 @@ def make_Sphere(
     default_suffix = f" (D={unit_prefix(diameter / 1000)}m)"
     name, name_suffix = get_name_and_suffix("Sphere", default_suffix, style)
     vert = min(max(vert, 3), 20)
-    sphere = make_BaseEllipsoid(vert=vert, dimension=[diameter] * 3)
+    sphere = make_BaseEllipsoid("plotly-dict", vert=vert, dimension=[diameter] * 3)
     return _update_mag_mesh(
-        sphere, name, name_suffix, mag, orientation, position, style, **kwargs,
+        sphere,
+        name,
+        name_suffix,
+        mag,
+        orientation,
+        position,
+        style,
+        **kwargs,
     )
 
 
@@ -306,7 +342,10 @@ def make_Pixels(positions, size=1) -> dict:
     Creates the plotly mesh3d parameters for Sensor pixels based on pixel positions and chosen size
     For now, only "cube" shape is provided.
     """
-    pixels = [make_BaseCuboid(position=p, dimension=[size] * 3) for p in positions]
+    pixels = [
+        make_BaseCuboid("plotly-dict", position=p, dimension=[size] * 3)
+        for p in positions
+    ]
     return merge_mesh3d(*pixels)
 
 
@@ -373,7 +412,9 @@ def make_Sensor(
             meshes_to_merge.append(pixels_mesh)
         hull_pos = 0.5 * (pixel.max(axis=0) + pixel.min(axis=0))
         hull_dim[hull_dim == 0] = pixel_dim / 2
-        hull_mesh = make_BaseCuboid(position=hull_pos, dimension=hull_dim)
+        hull_mesh = make_BaseCuboid(
+            "plotly-dict", position=hull_pos, dimension=hull_dim
+        )
         hull_mesh["facecolor"] = np.repeat(color, len(hull_mesh["i"]))
         meshes_to_merge.append(hull_mesh)
     sensor = merge_mesh3d(*meshes_to_merge)
@@ -412,10 +453,15 @@ def _update_mag_mesh(
                 color_south=color.south,
             )
             mesh_dict["intensity"] = getIntensity(
-                vertices=vertices, axis=magnetization,
+                vertices=vertices,
+                axis=magnetization,
             )
     mesh_dict = place_and_orient_model3d(
-        mesh_dict, orientation, position, showscale=False, name=f"{name}{name_suffix}",
+        model_kwargs=mesh_dict,
+        orientation=orientation,
+        position=position,
+        showscale=False,
+        name=f"{name}{name_suffix}",
     )
     return {**mesh_dict, **kwargs}
 
@@ -476,7 +522,7 @@ def get_plotly_traces(
     kwargs["color"] = style_color if style_color is not None else color
     kwargs["opacity"] = style.opacity
     legendgroup = f"{input_obj}" if legendgroup is None else legendgroup
-
+    Config.display.context.colors[input_obj] = kwargs["color"]
     if hasattr(style, "magnetization"):
         if style.magnetization.show:
             check_excitations([input_obj])
@@ -515,42 +561,49 @@ def get_plotly_traces(
             make_func = make_Sensor
         elif isinstance(input_obj, Cuboid):
             kwargs.update(
-                mag=input_obj.magnetization, dimension=input_obj.dimension,
+                mag=input_obj.magnetization,
+                dimension=input_obj.dimension,
             )
             make_func = make_Cuboid
         elif isinstance(input_obj, Cylinder):
-            base_vertices = 50
+            base = 50
             kwargs.update(
                 mag=input_obj.magnetization,
                 diameter=input_obj.dimension[0],
                 height=input_obj.dimension[1],
-                base_vertices=base_vertices,
+                base=base,
             )
             make_func = make_Cylinder
         elif isinstance(input_obj, CylinderSegment):
             vert = 50
             kwargs.update(
-                mag=input_obj.magnetization, dimension=input_obj.dimension, vert=vert,
+                mag=input_obj.magnetization,
+                dimension=input_obj.dimension,
+                vert=vert,
             )
             make_func = make_CylinderSegment
         elif isinstance(input_obj, Sphere):
             kwargs.update(
-                mag=input_obj.magnetization, diameter=input_obj.diameter,
+                mag=input_obj.magnetization,
+                diameter=input_obj.diameter,
             )
             make_func = make_Sphere
         elif isinstance(input_obj, Dipole):
             kwargs.update(
-                moment=input_obj.moment, autosize=autosize,
+                moment=input_obj.moment,
+                autosize=autosize,
             )
             make_func = make_Dipole
         elif isinstance(input_obj, Line):
             kwargs.update(
-                vertices=input_obj.vertices, current=input_obj.current,
+                vertices=input_obj.vertices,
+                current=input_obj.current,
             )
             make_func = make_Line
         elif isinstance(input_obj, Loop):
             kwargs.update(
-                diameter=input_obj.diameter, current=input_obj.current,
+                diameter=input_obj.diameter,
+                current=input_obj.current,
             )
             make_func = make_Loop
         elif getattr(input_obj, "children", None) is not None:
@@ -564,44 +617,45 @@ def get_plotly_traces(
         extra_model3d_traces = (
             style.model3d.data if style.model3d.data is not None else []
         )
-        extra_model3d_traces = [
-            t for t in extra_model3d_traces if t.backend == "plotly"
-        ]
-        for orient, pos in zip(*get_rot_pos_from_path(input_obj, style.path.frames)):
+        rots, poss, _ = get_rot_pos_from_path(input_obj, style.path.frames)
+        for orient, pos in zip(rots, poss):
             if style.model3d.showdefault and make_func is not None:
                 path_traces.append(
                     make_func(position=pos, orientation=orient, **kwargs)
                 )
             for extr in extra_model3d_traces:
                 if extr.show:
-                    trace3d = {}
-                    obj_extr_trace = (
-                        extr.trace() if callable(extr.trace) else extr.trace
-                    )
-                    ttype = obj_extr_trace["type"]
-                    if ttype == "mesh3d":
-                        trace3d["showscale"] = False
-                        if "facecolor" in obj_extr_trace:
-                            ttype = "mesh3d_facecolor"
-                    if ttype == "scatter3d":
-                        trace3d["marker_color"] = kwargs["color"]
-                        trace3d["line_color"] = kwargs["color"]
-                    else:
-                        trace3d["color"] = kwargs["color"]
-                    trace3d.update(
-                        linearize_dict(
-                            place_and_orient_model3d(
-                                obj_extr_trace,
-                                orientation=orient,
-                                position=pos,
-                                scale=extr.scale,
-                            ),
-                            separator="_",
+                    extr.update(extr.updatefunc())
+                    if extr.backend == "plotly":
+                        trace3d = {}
+                        ttype = extr.constructor.lower()
+                        obj_extr_trace = (
+                            extr.kwargs() if callable(extr.kwargs) else extr.kwargs
                         )
-                    )
-                    if ttype not in path_traces_extra:
-                        path_traces_extra[ttype] = []
-                    path_traces_extra[ttype].append(trace3d)
+                        obj_extr_trace = {"type": ttype, **obj_extr_trace}
+                        if ttype == "mesh3d":
+                            trace3d["showscale"] = False
+                            if "facecolor" in obj_extr_trace:
+                                ttype = "mesh3d_facecolor"
+                        if ttype == "scatter3d":
+                            trace3d["marker_color"] = kwargs["color"]
+                            trace3d["line_color"] = kwargs["color"]
+                        else:
+                            trace3d["color"] = kwargs["color"]
+                        trace3d.update(
+                            linearize_dict(
+                                place_and_orient_model3d(
+                                    model_kwargs=obj_extr_trace,
+                                    orientation=orient,
+                                    position=pos,
+                                    scale=extr.scale,
+                                ),
+                                separator="_",
+                            )
+                        )
+                        if ttype not in path_traces_extra:
+                            path_traces_extra[ttype] = []
+                        path_traces_extra[ttype].append(trace3d)
         trace = merge_traces(*path_traces)
         for ind, traces_extra in enumerate(path_traces_extra.values()):
             extra_model3d_trace = merge_traces(*traces_extra)
@@ -821,6 +875,7 @@ def animate_path(
     animation_maxfps=50,
     animation_maxframes=200,
     animation_slider=False,
+    animation_path=None,
     row=None,
     col=None,
     **kwargs,
@@ -863,10 +918,16 @@ def animate_path(
     -------
     None: NoneTyp
     """
-
-    path_indices, frame_duration, new_fps = extract_path_indices(
-        objs, animation_time, animation_fps, animation_maxfps, animation_maxframes
-    )
+    if animation_path is None:
+        path_indices, frame_duration, new_fps = get_animation_path_params(
+            objs,
+            animation_time=animation_time,
+            animation_fps=animation_fps,
+            animation_maxfps=animation_maxfps,
+            animation_maxframes=animation_maxframes,
+        )
+    else:
+        path_indices, frame_duration, new_fps = animation_path
 
     # calculate exponent of last frame index to avoid digit shift in
     # frame number display during animation
@@ -878,7 +939,7 @@ def animate_path(
 
     if animation_slider:
         sliders_dict = {
-            "active": 0,
+            "active": len(path_indices) - 1,
             "yanchor": "top",
             "font": {"size": 10},
             "xanchor": "left",
@@ -887,7 +948,7 @@ def animate_path(
                 "visible": True,
                 "xanchor": "right",
             },
-            "pad": {"b": 10, "t": 10},
+            "pad": {"b": 10, "t": 25},
             "len": 0.9,
             "x": 0.1,
             "y": 0,
@@ -915,7 +976,7 @@ def animate_path(
             },
         ],
         "direction": "left",
-        "pad": {"r": 10, "t": 20},
+        "pad": {"r": 10, "t": 35},
         "showactive": False,
         "type": "buttons",
         "x": 0.1,
@@ -946,7 +1007,10 @@ def animate_path(
             slider_step = {
                 "args": [
                     [str(ind + 1)],
-                    {"frame": {"duration": 0, "redraw": True}, "mode": "immediate",},
+                    {
+                        "frame": {"duration": 0, "redraw": True},
+                        "mode": "immediate",
+                    },
                 ],
                 "label": str(ind + 1),
                 "method": "animate",
@@ -959,7 +1023,6 @@ def animate_path(
         for t in f["data"]:
             t["scene"] = fig.data[-1].scene
     fig.frames = frames
-    clean_legendgroups(fig)
     fig.update_layout(
         # height=None,
         title=title,
@@ -969,8 +1032,12 @@ def animate_path(
     apply_fig_ranges(fig, zoom=zoom)
 
 
-def extract_path_indices(
-    objs, animation_time, animation_fps, animation_maxfps, animation_maxframes
+def get_animation_path_params(
+    objs,
+    animation_time=3,
+    animation_fps=30,
+    animation_maxfps=50,
+    animation_maxframes=200,
 ):
     """Make sure the number of frames does not exceed the max frames and max frame rate
     # downsample if necessary"""
@@ -1030,6 +1097,8 @@ def display_plotly(
     color_sequence=None,
     row=None,
     col=None,
+    animation_path=None,
+    output="model3d",
     **kwargs,
 ):
 
@@ -1092,32 +1161,7 @@ def display_plotly(
         fig = go.Figure()
 
     # Check animation parameters
-    if (
-        isinstance(animation, numbers.Number)
-        and not isinstance(animation, bool)
-        and animation > 0
-    ):
-        kwargs["animation_time"] = animation
-        animation = True
-    if (
-        not any(
-            getattr(obj, "position", np.array([])).ndim > 1 for obj in flat_obj_list
-        )
-        and animation is not False
-    ):  # check if some path exist for any object
-        animation = False
-        warnings.warn("No path to be animated detected, displaying standard plot")
-
-    animation_kwargs = {
-        k: v for k, v in kwargs.items() if k.split("_")[0] == "animation"
-    }
-    if animation is False:
-        kwargs = {k: v for k, v in kwargs.items() if k not in animation_kwargs}
-    else:
-        for k, v in Config.display.animation.as_dict().items():
-            anim_key = f"animation_{k}"
-            if kwargs.get(anim_key, None) is None:
-                kwargs[anim_key] = v
+    animation, kwargs, _ = process_animation_kwargs(animation, kwargs, flat_obj_list)
 
     if obj_list:
         style = getattr(obj_list[0], "style", None)
@@ -1131,12 +1175,23 @@ def display_plotly(
 
     if color_sequence is None:
         color_sequence = Config.display.colorsequence
-
     with fig.batch_update():
-        if animation is not False:
-            if row is not None or col is not None:
+        if output != "model3d":
+            draw_sensor_values(
+                flat_obj_list,
+                fig=fig,
+                row=row,
+                col=col,
+                animation_path=animation_path,
+                field=output,
+                **kwargs,
+            )
+        elif animation is not False:
+            animated_subplots = Config.display.context.subplots
+            if (row is not None or col is not None) and not animated_subplots:
                 raise NotImplementedError(
-                    "Animation in combination with subplots is not supported at the moment."
+                    "Animation in combination with subplots must be called via the `with` "
+                    "statement. Check the `magpylib.show_context` docstring for examples."
                 )
             title = "3D-Paths Animation" if title is None else title
             animate_path(
@@ -1147,25 +1202,262 @@ def display_plotly(
                 title=title,
                 row=row,
                 col=col,
+                animation_path=animation_path,
                 **kwargs,
             )
         else:
             traces_dicts = draw_frame(obj_list, color_sequence, zoom, **kwargs)
             traces = [t for traces in traces_dicts.values() for t in traces]
             fig.add_traces(traces, rows=row, cols=col)
-            clean_legendgroups(fig)
             fig.update_layout(title_text=title)
             apply_fig_ranges(fig, zoom=zoom)
-        fig.update_layout(legend_itemsizing="constant")
+        clean_legendgroups(fig)
+        fig.update_layout(legend_itemsizing="constant", legend_groupclick="toggleitem")
     if show_fig:
         fig.show(renderer=renderer)
 
 
+def process_animation_kwargs(animation, kwargs, flat_obj_list=None):
+    """extracts animation kwargs"""
+    if (
+        isinstance(animation, numbers.Number)
+        and not isinstance(animation, bool)
+        and animation > 0
+    ):
+        kwargs["animation_time"] = animation
+        animation = True
+    if flat_obj_list is not None:
+        if (
+            not any(
+                getattr(obj, "position", np.array([])).ndim > 1 for obj in flat_obj_list
+            )
+            and animation is not False
+        ):  # check if some path exist for any object
+            animation = False
+            warnings.warn("No path to be animated detected, displaying standard plot")
+
+    no_anim_kwargs = {}
+    animation_kwargs = {}
+    for k, v in kwargs.items():
+        if k.split("_")[0] == "animation":
+            if k != "animation":
+                animation_kwargs[k] = v
+        else:
+            no_anim_kwargs[k] = v
+
+    if animation is False:
+        kwargs = no_anim_kwargs
+    else:
+        disp_props = Config.display.animation.copy()
+        disp_props.update(
+            {k[len("animation") + 1 :]: v for k, v in animation_kwargs.items()}
+        )
+        animation_kwargs = disp_props.as_dict(flatten=True, separator="_")
+        animation_kwargs = {f"animation_{k}": v for k, v in animation_kwargs.items()}
+        kwargs = {**no_anim_kwargs, **animation_kwargs}
+    return animation, kwargs, animation_kwargs
+
+
 def clean_legendgroups(fig):
     """removes legend duplicates"""
-    legendgroups = []
-    for t in fig.data:
-        if t.legendgroup not in legendgroups:
-            legendgroups.append(t.legendgroup)
+    frames = [fig.data]
+    if fig.frames:
+        data_list = [f["data"] for f in fig.frames]
+        frames.extend(data_list)
+    for f in frames:
+        legendgroups = []
+        for t in f:
+            if t.legendgroup not in legendgroups and t.legendgroup is not None:
+                legendgroups.append(t.legendgroup)
+            elif t.legendgroup is not None and t.legendgrouptitle.text is None:
+                t.showlegend = False
+
+
+def batch_animate_subplots(ctx, show_fn, **kwargs):
+    """draw objects into canvas in a batch"""
+    all_objs = [plot["objects"] for plot in ctx.subplots]
+    all_objs = format_obj_input(all_objs, allow="sources+sensors+collections")
+
+    anim_kwargs = process_animation_kwargs(kwargs.get("animation", True), kwargs)[-1]
+    anim_kwargs = {
+        k: v
+        for k, v in anim_kwargs.items()
+        if k.split("_")[1] in ("time", "fps", "maxframes", "maxfps")
+    }
+    anim_path = get_animation_path_params(all_objs, **anim_kwargs)
+
+    fig = ctx.canvas
+    with fig.batch_update():
+        for ind, plot in enumerate(ctx.subplots):
+            subfig = plot["kwargs"]["canvas"]
+            show_fn(*plot["objects"], **plot["kwargs"], animation_path=anim_path)
+            fig.add_traces(subfig.data)
+            if ind == 0:
+                frames = subfig.frames
+            else:
+                for f1, f2 in zip(frames, subfig.frames):
+                    data = list(f1["data"])
+                    data.extend(list(f2["data"]))
+                    f1["data"] = data
+            fig.update_layout(subfig.layout)
+            if hasattr(subfig.data[-1], "scene"):
+                scene_str = subfig.data[-1].scene
+                getattr(fig.layout, scene_str).update(getattr(subfig.layout, scene_str))
+        fig.frames = frames
+        clean_legendgroups(fig)
+
+
+def draw_sensor_values(
+    flat_obj_list,
+    fig,
+    row=None,
+    col=None,
+    animation_path=None,
+    field="B",
+    layout=None,
+    **kwargs,
+):
+    """draws and animates sensor values over a path in a subplot"""
+    if layout is None:
+        layout = {}
+    layout_kwargs = layout
+    layout_kwargs.update(
+        {k[len("layout_") :]: v for k, v in kwargs.items() if k.startswith("layout_")}
+    )
+    sources = format_obj_input(flat_obj_list, allow="sources")
+    sensors = format_obj_input(flat_obj_list, allow="sensors")
+    # pylint: disable=import-outside-toplevel
+    from magpylib._src.fields.field_wrap_BH_level3 import getBH_level2
+
+    coords_indices = [0, 1, 2]
+    field_str = field
+    if len(field) > 1:
+        coords_indices = list(set("xyz".index(k) for k in field[1:]))
+        field_str = field[0]
+    xyz_linestyles = ("solid", "dash", "dot")
+
+    BH_array = getBH_level2(
+        sources, sensors, sumup=True, squeeze=False, field=field_str
+    )
+    BH_array = BH_array[0]  # select first source
+    BH_array = BH_array.swapaxes(0, 1)  # swap axes to have sensors first, path second
+    if BH_array.ndim == 4:  # average on pixel if any
+        BH_array = BH_array.mean(axis=-2)
+
+    if animation_path is None:
+        frames_indices = [*range(BH_array.shape[1])]
+    else:
+        frames_indices = np.array(animation_path[0])
+
+    def get_kwargs(mode, sens, field_str, BH, coord_ind, frame_ind):
+        color = Config.display.context.colors.get(sens, None)
+        k = "xyz"[coord_ind]
+        if len(sources) < 8:
+            src_lst_str = "<br>".join(f" - {s}" for s in sources)
         else:
-            t.showlegend = False
+            counts = Counter(s.__class__.__name__ for s in sources)
+            src_lst_str = "<br>".join(f" {v}x {k}" for k, v in counts.items())
+        name = (
+            "Sensor"
+            if sens.style.label is None or sens.style.label.strip() == ""
+            else sens.style.label
+        )
+        src_str = f"""{len(sources)} source{'s' if len(sources)>1 else ''}"""
+        kwargs = dict(
+            mode=mode,
+            name=f"{name}",
+            legendgroup=f"{field_str}{k}",
+            legendgrouptitle_text=f"{field_str}{k} from {src_str}",
+            text="Sources",
+            hovertemplate=(
+                "<b>Path index</b>: %{x}    "
+                f"<b>{field_str}{k}</b>: " + "%{y}T<br>"
+                f"<b>Sources</b>:<br>{src_lst_str}"
+                # "<extra></extra>",
+            ),
+        )
+        if mode == "markers":
+            kwargs.update(
+                x=[frames_indices[frame_ind]],
+                y=[BH.T[coord_ind][frames_indices[frame_ind]]],
+                marker_size=10,
+                marker_color=color,
+                showlegend=False,
+            )
+        else:
+            kwargs.update(
+                x=frames_indices,
+                y=BH.T[coord_ind][frames_indices],
+                line_dash=xyz_linestyles[coord_ind],
+                line_color=color,
+                showlegend=True,
+            )
+        return kwargs
+
+    for sens, BH in zip(sensors, BH_array):
+        for coord_ind in coords_indices:
+            kwargs = dict(row=row, col=col)
+            fig.add_scatter(
+                **get_kwargs("lines", sens, field_str, BH, coord_ind, -1), **kwargs
+            )
+            if animation_path is not None:
+                fig.add_scatter(
+                    **get_kwargs("markers", sens, field_str, BH, coord_ind, -1),
+                    **kwargs,
+                )
+
+    # extract axis info from one the traces (all are on the same axis)
+    # this is necessary to act on the right subplot
+    t = fig.data[-1]
+    xaxis, yaxis = t.xaxis, t.yaxis
+    m, M = min(frames_indices), max(frames_indices)
+
+    # set subplot range
+    fig_xaxis = getattr(
+        fig.layout, "xaxis" if xaxis in (None, "x") else "xaxis" + xaxis[1]
+    )
+    fig_xaxis.range = [
+        m - (M - m) * 0.05,
+        M + (M - m) * 0.05,
+    ]
+    fig_xaxis.title = "Path indices"
+    BH_array_subset = BH_array[
+        :, np.array(frames_indices).reshape(-1, 1), coords_indices
+    ]
+    m, M = np.min(BH_array_subset), np.max(BH_array_subset)
+    fig_yaxis = getattr(
+        fig.layout, "yaxis" if yaxis in (None, "y") else "yaxis" + yaxis[1]
+    )
+    fig_yaxis.title = f"{field} [T]"
+    fig_yaxis.range = [
+        m - (M - m) * 0.05,
+        M + (M - m) * 0.05,
+    ]
+    # fig_yaxis.ticklabelposition="inside" # prettier but flickers
+
+    if animation_path is not None:
+        axis_kwargs = dict(xaxis=xaxis, yaxis=yaxis)
+        frames = []
+        for ind, _ in enumerate(frames_indices):
+            data = []
+            for sens, BH in zip(sensors, BH_array):
+                for coord_ind in coords_indices:
+                    data.extend(
+                        [
+                            {
+                                **get_kwargs(
+                                    "lines", sens, field_str, BH, coord_ind, ind
+                                ),
+                                **axis_kwargs,
+                            },
+                            {
+                                **get_kwargs(
+                                    "markers", sens, field_str, BH, coord_ind, ind
+                                ),
+                                **axis_kwargs,
+                            },
+                        ]
+                    )
+            frames.append(dict(data=data))
+        fig.frames = frames
+    fig.update_layout(**layout_kwargs)

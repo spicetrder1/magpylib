@@ -15,7 +15,7 @@ class Sensor(BaseGeo, BaseDisplayRepr):
     Can be used as `observers` input for magnetic field computation.
 
     When `position=(0,0,0)` and `orientation=None` local object coordinates
-    coincide with the gobal coordinate system.
+    coincide with the global coordinate system.
 
     A sensor is made up of pixel (sensing elements) where the magnetic field is evaluated.
 
@@ -36,7 +36,7 @@ class Sensor(BaseGeo, BaseDisplayRepr):
 
     style: dict
         Object style inputs must be in dictionary form, e.g. `{'color':'red'}` or
-        using style-underscore_magic, e.g. `style_color='red'`.
+        using style underscore magic, e.g. `style_color='red'`.
 
     Returns
     -------
@@ -105,7 +105,7 @@ class Sensor(BaseGeo, BaseDisplayRepr):
             shape_m1=3,
             sig_name='pixel',
             sig_type='array_like (list, tuple, ndarray) with shape (n1, n2, ..., 3)',
-            squeeze=True)
+        )
 
 
     def getB(self, *sources, sumup=False, squeeze=True):

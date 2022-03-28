@@ -8,7 +8,7 @@ trigger:
 - feature-*
 
 pool:
-  vmImage: 'vs2017-win2016'
+  vmImage: 'windows-latest'
 strategy:
   matrix:
     Python37:
@@ -27,7 +27,7 @@ steps:
 
 - script: |
     python -m pip install --upgrade pip
-    pip install .[testing]
+    pip install .[dev]
   displayName: 'Install dependencies'
 
 - script: |
