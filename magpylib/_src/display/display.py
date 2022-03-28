@@ -15,7 +15,6 @@ from magpylib._src.input_checks import (
     check_format_input_vector,
 )
 
-
 # ON INTERFACE
 def _show(
     *objects,
